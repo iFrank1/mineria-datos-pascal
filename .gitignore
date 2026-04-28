@@ -1,0 +1,14 @@
+#evitar cargar archivos de compilación y binarios
+*.exe
+*.ppu
+*.o
+*.lps
+*.res
+*.or
+
+#tampoco carpetas de librerías y respaldos
+lib/
+backup/
+
+#archivos de configuración de usuario no porque chocan entre PC y Lap
+__history/
