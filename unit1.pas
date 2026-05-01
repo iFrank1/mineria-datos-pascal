@@ -23,6 +23,7 @@ type
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
+    MenuItem11: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -55,19 +56,19 @@ type
     procedure calDesvXCol(fils, cols: integer);
 
     //metodos de normalizacion de datos numericos vistos en clase
-    procedure calcularMediaDS(fils, cols: integer);
-    procedure calcularDesvEstDS(fils, cols: integer);
+
+
     procedure normZscore(fils, cols: integer);
 
     procedure minMax(fils, cols: integer);
-    function obtenerValorExtremoIzq(fils, cols: integer): real;
-    function obtenerValorExtremoDer(fils, cols: integer): real;
+    function minimoColumna(fils, j: integer): real;
+    function maximoColumna(fils, j: integer): real;
     function nuevoMin(): string;
     function nuevoMax(): string;
 
     procedure escDecimal(fils, cols: integer);
     function obtenerJ(maxA: real): real;
-    function obtValAbsMax(fils, cols: integer): real;
+    function obtValAbsMax(fils, j: integer): real;
 
     //graficas
     procedure graficaBarras(fils, cols, clases: integer);
@@ -76,7 +77,7 @@ type
 var
   Form1: TForm1;
   dataSet: matrizDatos;
-  mediaG, desvEstG: real;
+
   F:Textfile;
 
 implementation
@@ -137,30 +138,6 @@ begin
 end;
 
 //calculo de la media + desviacion
-procedure TForm1.calcularMediaDS(fils, cols: integer);
-var
-  i,j: integer;
-  sum, n: real;
-
-  //tengo la matriz del form y se cuantas columnas
-  //que corresponde al stringgrid1
-begin
-  sum:= 0;
-  n:= 0;
-
-  for j:=0 to cols-1 do begin
-    for i:=0 to fils-1 do begin
-      //cuando el encabezado indique que no es numerico simplemente saltamos esa
-      //columna, no le calculamos la media (se tendran 0s)
-      if dataSet[0,j] <> 0 then begin
-        continue;
-      end;
-      n:= n + 1;
-      sum:= sum + dataSet[i+1,j];
-    end;
-  end;
-    mediaG:= sum/n;
-end;
 
 
 //calculo de la media por columna
@@ -189,31 +166,6 @@ begin
     stringgrid2.Cells[j,0]:= FloatToStr(sum/Real(fils));
   end;
 
-end;
-
-//Calculo de la desviacion estandar
-procedure TForm1.calcularDesvEstDS(fils, cols: integer);
-var
-  i,j: integer;
-  sumC, n: real;
-
-begin
-  sumC:= 0;
-  n:= 0;
-  for j:=0 to cols-1 do begin
-    for i:=0 to fils-1 do begin
-      //cuando el encabezado indique que no es numerico simplemente saltamos esa
-      //columna, no le calculamos la media (se tendran 0s)
-      if dataSet[0,j] <> 0 then begin
-        continue;
-      end;
-      n:= n + 1;
-      //se reinician por columna a 0, cada uno tiene media y desv aparte
-      sumC:= sumC + power((dataSet[i+1,j] - mediaG), 2);
-    end;
-  end;
-  showmessage(floattostr(sumC) + 'n: '  +floattostr(n));
-  desvEstG:= sqrt(sumC/n);
 end;
 
 //calculo de la desviacion estandar por columna
@@ -252,10 +204,10 @@ begin
   Form2.StringGrid1.RowCount:=fils;
   Form2.StringGrid1.ColCount:=cols;
 
-  calcularMediaDS(fils, cols);
-  calcularDesvEstDS(fils, cols);
+  //calcularMediaDS(fils, cols);
+  //calcularDesvEstDS(fils, cols);
 
-  showmessage(floattostr(desvEstG)  + ' ' + floattostr(mediaG) );
+  //showmessage(floattostr(desvEstG)  + ' ' + floattostr(mediaG) );
 
   for j:=0 to cols-1 do begin
     for i:=0 to fils-1 do begin
@@ -266,7 +218,7 @@ begin
         continue;
       end;
       //z score
-      norm := (dataSet[i+1,j] - mediaG) / desvEstG;
+      norm := (dataSet[i+1,j] - StrToFloat(StringGrid2.Cells[j,0])) / StrToFloat(StringGrid2.Cells[j,1]);
       form2.StringGrid1.Cells[j,i] := FloatToStr(norm);
 
     end;
@@ -274,14 +226,13 @@ begin
 end;
 
 //normalizacion min max y sus funciones necesarias para lograrlo
-function TForm1.obtenerValorExtremoIzq(fils, cols: integer): real;
+function TForm1.minimoColumna(fils, j: integer): real;
 var
-  i,j, b: integer;
+  i, b: integer;
   min: real;
 
 begin
      b:=0;
-     for j:=0 to cols-1 do begin
        for i:=0 to fils-1 do begin
            if dataSet[0,j] <> 0 then begin
               continue;
@@ -294,19 +245,17 @@ begin
               min:= dataSet[i+1,j];
            end;
        end;
-     end;
-     obtenerValorExtremoIzq:= min;
+     minimoColumna:= min;
      //showMessage(floattostr(min));
 end;
 
-function TForm1.obtenerValorExtremoDer(fils, cols: integer): real;
+function TForm1.maximoColumna(fils, j: integer): real;
 var
-  i,j, b: integer;
+  i, b: integer;
   max: real;
 
 begin
      b:= 0;
-     for j:=0 to cols-1 do begin
        for i:=0 to fils-1 do begin
            if dataSet[0,j] <> 0 then begin
               continue;
@@ -320,9 +269,8 @@ begin
               max:= dataSet[i+1,j];
            end;
        end;
-     end;
-     obtenerValorExtremoDer := max;
-     showMessage(floattostr(max));
+     maximoColumna := max;
+     //showMessage(floattostr(max));
 end;
 
 function TForm1.nuevoMin(): string;
@@ -347,41 +295,43 @@ begin
      Form3.StringGrid1.RowCount:=fils;
      Form3.StringGrid1.ColCount:=cols;
 
-     maxA:= obtenerValorExtremoDer(fils, cols);
-     minA:= obtenerValorExtremoIzq(fils, cols);
-
      newMax:= StrToFloat(nuevoMax());
      newMin:= StrToFloat(nuevoMin());
 
+
      for j:=0 to cols-1 do begin
-       for i:=0 to fils-1 do begin
+         maxA:= maximoColumna(fils, j);
+         minA:= minimoColumna(fils, j);
+         for i:=0 to fils-1 do begin
 
          //saltar no numericos
-         if dataSet[0,j] <> 0 then begin
-           form3.StringGrid1.Cells[j,i] := FloatToStr(0);
-           continue;
-         end;
+                  if dataSet[0,j] <> 0 then begin
+                     form3.StringGrid1.Cells[j,i] := FloatToStr(0);
+                     continue;
+                  end;
+
          //min max
          v:= dataSet[i+1,j];
          //showMessage(floattostr(v));
          norm := (((v - minA) / (maxA - minA))*(newMax - newMin)) + newMin;
          form3.StringGrid1.Cells[j,i] := FloatToStr(norm);
 
-       end;
+         end;
+
      end;
 
 end;
 
 //normalizacion escalado decimal y sus funciones necesarias para lograrlo
 
-function TForm1.obtValAbsMax(fils, cols: integer): real;
+function TForm1.obtValAbsMax(fils, j: integer): real;
 var
-  i,j, b: integer;
+  i, b: integer;
   max: real;
 
 begin
      b:= 0;
-     for j:=0 to cols-1 do begin
+
        for i:=0 to fils-1 do begin
            if dataSet[0,j] <> 0 then begin
               continue;
@@ -395,9 +345,9 @@ begin
               max:= abs(dataSet[i+1,j]);
            end;
        end;
-     end;
+
      obtValAbsMax := max;
-     showMessage(floattostr(max));
+     //showMessage(floattostr(max));
 end;
 
 function TForm1.obtenerJ(maxA: real): real;
@@ -422,14 +372,16 @@ var
    i, k: integer;
    norm, maxA, j, v: real;
 begin
-     maxA:= obtValAbsMax(fils, cols);
-     j:= obtenerJ(maxA);
-     showMessage(floatToStr(obtenerJ(maxA)));
 
      Form4.StringGrid1.RowCount:=fils;
      Form4.StringGrid1.ColCount:=cols;
 
      for k:=0 to cols-1 do begin
+
+       maxA:= obtValAbsMax(fils, k);
+       //showMessage(floatToStr(obtenerJ(maxA)));
+       j:= obtenerJ(maxA);
+
        for i:=0 to fils-1 do begin
 
          //saltar no numericos
@@ -468,6 +420,8 @@ begin
      end;
 
      //graficando
+     //rgb propuesto para que cada una de las clases en teoria tenga un unico
+     //color
      chart1barseries1.Clear;
      colF:= (5 * 3.1416 / 3) / (clases-1);
      for i:=0 to clases-1 do begin

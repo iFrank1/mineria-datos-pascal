@@ -112,6 +112,11 @@ object Form1: TForm1
     object MenuItem4: TMenuItem
       Caption = 'Normalización'
       OnClick = MenuItem4Click
+      object MenuItem11: TMenuItem
+        Caption = 'Ninguna'
+        Checked = True
+        Default = True
+      end
       object MenuItem5: TMenuItem
         Caption = 'Z-Score'
         OnClick = MenuItem5Click
