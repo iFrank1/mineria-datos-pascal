@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, Grids, StdCtrls,
-  RTTICtrls, DateTimePicker, TASeries, TAGraph, Math;
+  ComCtrls, RTTICtrls, TASeries, TAGraph, Math;
 
 type
   matrizDatos = array of array of real;
@@ -16,6 +16,7 @@ type
   TForm1 = class(TForm)
     Chart1: TChart;
     Chart1BarSeries1: TBarSeries;
+    ComboBox1: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -24,6 +25,7 @@ type
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
+    MenuItem12: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -36,9 +38,11 @@ type
     SaveDialog1: TSaveDialog;
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
+    procedure ComboBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem11Click(Sender: TObject);
+    procedure MenuItem12Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
 
@@ -72,20 +76,20 @@ type
     function obtValAbsMax(fils, j: integer): real;
 
     //graficas
-    procedure graficaBarras(fils, cols, clases: integer);
+    procedure graficaBarras(fils, col, clases: integer);
   end;
 
 var
   Form1: TForm1;
   dataSet: matrizDatos;
   dataNorm: matrizDatos;
-
+  ubCols: array of integer;
   F:Textfile;
 
 implementation
 
 uses
-  Unit3, Unit4, Unit5;
+  Unit2;
 
 {$R *.lfm}
 
@@ -123,6 +127,7 @@ begin
       StringGrid1.Cells[j,i]:= FloatToStr(dataSet[i+1,j]);
     end;
   end;
+
 
   {
   pruebas con un grid aparte en el que iba viendo que no me saltara datos
@@ -219,26 +224,16 @@ var
   norm: real;
 begin
 
-  Form2.StringGrid1.RowCount:=fils;
-  Form2.StringGrid1.ColCount:=cols;
-
-  //calcularMediaDS(fils, cols);
-  //calcularDesvEstDS(fils, cols);
-
-  //showmessage(floattostr(desvEstG)  + ' ' + floattostr(mediaG) );
   setlength(dataNorm, fils, cols);
   for j:=0 to cols-1 do begin
     for i:=0 to fils-1 do begin
 
       //seguimos saltando no numericos
       if dataSet[0,j] <> 0 then begin
-        form2.StringGrid1.Cells[j,i] := FloatToStr(0);
         continue;
       end;
       //z score
       norm := (dataSet[i+1,j] - StrToFloat(StringGrid2.Cells[j,0])) / StrToFloat(StringGrid2.Cells[j,1]);
-      //tristemente no necesitamos esto aaaaaaaah
-      //form2.StringGrid1.Cells[j,i] := FloatToStr(norm);
       stringgrid1.Cells[j,i]:= FloatToStr(norm);
       dataNorm[i,j]:= norm;
     end;
@@ -311,9 +306,6 @@ var
    norm, minA, maxA, newMax, newMin, v: real;
 
 begin
-     //resize del nuevo grid para mostrar datos normalizados
-     Form3.StringGrid1.RowCount:=fils;
-     Form3.StringGrid1.ColCount:=cols;
 
      newMax:= StrToFloat(nuevoMax());
      newMin:= StrToFloat(nuevoMin());
@@ -328,7 +320,6 @@ begin
 
          //saltar no numericos
                   if dataSet[0,j] <> 0 then begin
-                     form3.StringGrid1.Cells[j,i] := FloatToStr(0);
                      continue;
                   end;
 
@@ -337,7 +328,6 @@ begin
          //showMessage(floattostr(v));
               norm := (((v - minA) / (maxA - minA))*(newMax - newMin)) + newMin;
               stringgrid1.Cells[j,i]:= FloatToStr(norm);
-              //form3.StringGrid1.Cells[j,i] := FloatToStr(norm);
               dataNorm[i,j]:= norm;
          end;
 
@@ -396,9 +386,6 @@ var
    norm, maxA, j, v: real;
 begin
 
-     Form4.StringGrid1.RowCount:=fils;
-     Form4.StringGrid1.ColCount:=cols;
-
      setlength(dataNorm, fils, cols);
 
      for k:=0 to cols-1 do begin
@@ -411,14 +398,12 @@ begin
 
          //saltar no numericos
          if dataSet[0,k] <> 0 then begin
-           form4.StringGrid1.Cells[k,i] := FloatToStr(0);
            continue;
          end;
          //escalado decimal
          v:= dataSet[i+1,k];
          //showMessage(floattostr(v));
          norm := v / power(10.0, j);
-         //form4.StringGrid1.Cells[k,i] := FloatToStr(norm);
          stringgrid1.Cells[k,i]:= FloatToStr(norm);
          dataNorm[i,k]:= norm;
        end;
@@ -426,7 +411,7 @@ begin
 
 end;
 
-procedure TForm1.graficaBarras(fils, cols, clases: integer);
+procedure TForm1.graficaBarras(fils, col, clases: integer);
 var
    i, r, g, b: integer;
    colF: real;
@@ -442,7 +427,7 @@ begin
      //salto la primera fila
      for i:=1 to fils-1 do begin
          //showmessage(inttostr(round(dataset[i, cols-1])));
-         contadores[round(dataset[i, cols-1])]:= contadores[round(dataset[i, cols-1])] + 1;
+         contadores[round(dataset[i, col])]:= contadores[round(dataset[i, col])] + 1;
      end;
 
      //graficando
@@ -480,16 +465,43 @@ begin
 
 end;
 
-procedure TForm1.MenuItem10Click(Sender: TObject);
+procedure TForm1.ComboBox1Change(Sender: TObject);
 var
    clases: integer;
 begin
+
+  clases:= round(dataset[0,ubcOLs[combobox1.itemindex]]);
+  //showmessage(inttostr(clases) + ' en la ubi ' + inttostr(ubcOLs[combobox1.itemindex]));
+  graficaBarras(round(length(dataset)), ubcOLs[combobox1.itemindex], clases);
+end;
+
+procedure TForm1.MenuItem10Click(Sender: TObject);
+var
+   j,k, index: integer;
+
+begin
   //showmessage(floattostr(dataset[0,stringgrid1.ColCount+1]));
-  clases:= round(dataset[0,length(dataset[0])-1]);
-  label4.Caption:='Distribución de clases';
-  graficaBarras(round(length(dataset)), round(length(dataset[0])), clases);
+  ubcols := nil;//quitar adv
+  setlength(ubcols, 0);
+  k:=0;
+  index:=-1;
+  combobox1.Items.Clear;
+  label4.Caption:='Barras:';
 
+  for j:=0 to stringgrid1.ColCount do begin
+      //gracioso porque ahora saltamos numericos
+      index:=index+1;
+      if dataSet[0,j] = 0 then begin
+           continue;
+      end;
 
+      setLength(ubCols, Length(ubcols) + 1);
+      ubCols[k]:= index;
+      k:=k+1;
+      //clases:= round(dataset[0,j]);
+      combobox1.items.add('Atributo: ' + inttostr(k) {+' Clases'+ inttostr(clases)});
+      //combobox1.items.add('Col j: ' + inttostr(ubCols[k-1]));
+  end;
 
 end;
 
@@ -500,6 +512,32 @@ begin
   MenuItem5.Checked:=False;
   MenuItem6.Checked:=False;
   MenuItem7.Checked:=False;
+end;
+
+
+//Guardar archivo del string grid
+procedure TForm1.MenuItem12Click(Sender: TObject);
+var
+   i: integer;
+begin
+  if savedialog1.Execute then begin
+    AssignFile(F,Savedialog1.FileName);
+
+    {$I-}
+         rewrite(F);  //crear archivo...si existe Sobre escribe y destruye
+    {$I+}
+
+    if IOResult=0 then
+    begin
+
+      for i:= 0 to stringgrid1.RowCount-1 do begin
+
+        Writeln(F,stringgrid1.Rows[i].CommaText);
+
+      end;
+      closefile(F);
+    end;
+  end;
 end;
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
@@ -521,7 +559,7 @@ begin
      MenuItem5.Checked:=True;
      MenuItem6.Checked:=False;
      MenuItem7.Checked:=False;
-     //Form2.Show;
+
 
 end;
 
@@ -533,7 +571,7 @@ begin
   MenuItem5.Checked:=False;
   MenuItem6.Checked:=True;
   MenuItem7.Checked:=False;
-  //Form3.Show;
+
 end;
 
 procedure TForm1.MenuItem7Click(Sender: TObject);
@@ -543,7 +581,7 @@ begin
   MenuItem5.Checked:=False;
   MenuItem6.Checked:=False;
   MenuItem7.Checked:=True;
-  //Form4.Show;
+
 end;
 
 end.
