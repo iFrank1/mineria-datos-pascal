@@ -38,6 +38,7 @@ type
     StringGrid2: TStringGrid;
     procedure FormCreate(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
+    procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
 
@@ -56,7 +57,7 @@ type
     procedure calDesvXCol(fils, cols: integer);
 
     //metodos de normalizacion de datos numericos vistos en clase
-
+    procedure sinNorm(fils, cols: integer);
 
     procedure normZscore(fils, cols: integer);
 
@@ -77,6 +78,7 @@ type
 var
   Form1: TForm1;
   dataSet: matrizDatos;
+  dataNorm: matrizDatos;
 
   F:Textfile;
 
@@ -95,6 +97,7 @@ var
   i,j: integer;
 begin
   SetLength(dataSet, fils, cols);
+
   //showmessage(inttostr(StringGrid1.RowCount)+ ' ' +  inttostr(StringGrid1.ColCount));
   //primero cargo todos los datos por si necesito las cabeceras y las clases
 //que seguramente m[as adelante
@@ -194,6 +197,21 @@ begin
   end;
 end;
 
+//Sin normalizar
+procedure TForm1.sinNorm(fils, cols: integer);
+var
+  i,j: integer;
+begin
+  for j:=0 to cols-1 do begin
+      for i:=0 to fils-1 do begin
+          stringgrid1.cells[j,i]:= floattostr(dataSet[i+1,j]);
+      end;
+  end;
+
+end;
+
+
+
 //normalizacion Z-Score
 procedure TForm1.normZscore(fils, cols: integer);
 var
@@ -208,7 +226,7 @@ begin
   //calcularDesvEstDS(fils, cols);
 
   //showmessage(floattostr(desvEstG)  + ' ' + floattostr(mediaG) );
-
+  setlength(dataNorm, fils, cols);
   for j:=0 to cols-1 do begin
     for i:=0 to fils-1 do begin
 
@@ -219,8 +237,10 @@ begin
       end;
       //z score
       norm := (dataSet[i+1,j] - StrToFloat(StringGrid2.Cells[j,0])) / StrToFloat(StringGrid2.Cells[j,1]);
-      form2.StringGrid1.Cells[j,i] := FloatToStr(norm);
-
+      //tristemente no necesitamos esto aaaaaaaah
+      //form2.StringGrid1.Cells[j,i] := FloatToStr(norm);
+      stringgrid1.Cells[j,i]:= FloatToStr(norm);
+      dataNorm[i,j]:= norm;
     end;
   end;
 end;
@@ -298,6 +318,8 @@ begin
      newMax:= StrToFloat(nuevoMax());
      newMin:= StrToFloat(nuevoMin());
 
+     setlength(dataNorm, fils, cols);
+
 
      for j:=0 to cols-1 do begin
          maxA:= maximoColumna(fils, j);
@@ -311,11 +333,12 @@ begin
                   end;
 
          //min max
-         v:= dataSet[i+1,j];
+               v:= dataSet[i+1,j];
          //showMessage(floattostr(v));
-         norm := (((v - minA) / (maxA - minA))*(newMax - newMin)) + newMin;
-         form3.StringGrid1.Cells[j,i] := FloatToStr(norm);
-
+              norm := (((v - minA) / (maxA - minA))*(newMax - newMin)) + newMin;
+              stringgrid1.Cells[j,i]:= FloatToStr(norm);
+              //form3.StringGrid1.Cells[j,i] := FloatToStr(norm);
+              dataNorm[i,j]:= norm;
          end;
 
      end;
@@ -376,6 +399,8 @@ begin
      Form4.StringGrid1.RowCount:=fils;
      Form4.StringGrid1.ColCount:=cols;
 
+     setlength(dataNorm, fils, cols);
+
      for k:=0 to cols-1 do begin
 
        maxA:= obtValAbsMax(fils, k);
@@ -393,8 +418,9 @@ begin
          v:= dataSet[i+1,k];
          //showMessage(floattostr(v));
          norm := v / power(10.0, j);
-         form4.StringGrid1.Cells[k,i] := FloatToStr(norm);
-
+         //form4.StringGrid1.Cells[k,i] := FloatToStr(norm);
+         stringgrid1.Cells[k,i]:= FloatToStr(norm);
+         dataNorm[i,k]:= norm;
        end;
      end;
 
@@ -407,7 +433,7 @@ var
    contadores: array of integer;
 begin
      contadores := nil;//solo para quitar la advertencia de abajo
-     //showmessage(inttostr(fils) + ' ' + inttostr(cols) + ' ' + inttostr(clases));
+     //showmessage(inttostr(fils) + ' ' + inttostr(cols)+' '+inttostr(clases));
      setLength(contadores, clases);
      for i:=0 to clases-1 do begin
          contadores[i]:= 0;
@@ -467,6 +493,15 @@ begin
 
 end;
 
+procedure TForm1.MenuItem11Click(Sender: TObject);
+begin
+  sinNorm(stringgrid1.RowCount, stringgrid1.ColCount);
+  MenuItem11.Checked:=True;
+  MenuItem5.Checked:=False;
+  MenuItem6.Checked:=False;
+  MenuItem7.Checked:=False;
+end;
+
 procedure TForm1.MenuItem3Click(Sender: TObject);
 begin
 
@@ -482,7 +517,11 @@ end;
 procedure TForm1.MenuItem5Click(Sender: TObject);
 begin
      normZscore(stringgrid1.RowCount, stringgrid1.ColCount);
-     Form2.Show;
+     MenuItem11.Checked:=False;
+     MenuItem5.Checked:=True;
+     MenuItem6.Checked:=False;
+     MenuItem7.Checked:=False;
+     //Form2.Show;
 
 end;
 
@@ -490,13 +529,21 @@ procedure TForm1.MenuItem6Click(Sender: TObject);
 begin
 
   minMax(stringgrid1.RowCount, stringgrid1.ColCount);
-  Form3.Show;
+  MenuItem11.Checked:=False;
+  MenuItem5.Checked:=False;
+  MenuItem6.Checked:=True;
+  MenuItem7.Checked:=False;
+  //Form3.Show;
 end;
 
 procedure TForm1.MenuItem7Click(Sender: TObject);
 begin
   escDecimal(stringgrid1.RowCount, stringgrid1.ColCount);
-  Form4.Show;
+  MenuItem11.Checked:=False;
+  MenuItem5.Checked:=False;
+  MenuItem6.Checked:=False;
+  MenuItem7.Checked:=True;
+  //Form4.Show;
 end;
 
 end.

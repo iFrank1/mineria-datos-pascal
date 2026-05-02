@@ -116,6 +116,7 @@ object Form1: TForm1
         Caption = 'Ninguna'
         Checked = True
         Default = True
+        OnClick = MenuItem11Click
       end
       object MenuItem5: TMenuItem
         Caption = 'Z-Score'
