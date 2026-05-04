@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, Grids, StdCtrls,
-  ComCtrls, RTTICtrls, TASeries, TAGraph, Math;
+  ComCtrls, RTTICtrls, TASeries, TAGraph, Math, TAChartUtils;
 
 type
   matrizDatos = array of array of real;
@@ -413,34 +413,68 @@ end;
 
 procedure TForm1.graficaBarras(fils, col, clases: integer);
 var
-   i, r, g, b: integer;
+   i, r, g, b, otros: integer;
    colF: real;
+   //countUnkn: integer;
+
    contadores: array of integer;
 begin
      contadores := nil;//solo para quitar la advertencia de abajo
+
+
      //showmessage(inttostr(fils) + ' ' + inttostr(cols)+' '+inttostr(clases));
      setLength(contadores, clases);
+
+
+     otros:= 0;
+
+
+
      for i:=0 to clases-1 do begin
          contadores[i]:= 0;
      end;
 
-     //salto la primera fila
+     //salto la primera fila porque no es relevante para este paso
      for i:=1 to fils-1 do begin
          //showmessage(inttostr(round(dataset[i, cols-1])));
+
+         //showmessage('Hola no ando contando porque si tengo un 2 kbronazo! '
+         //+ inttostr(length(contadores)));
+         //error: no debemos modificar el tam cada que cuenta,
+       //sino cada vez que es un numero diferente
+       if not (round(dataset[i, col]) in [0..(length(contadores)-1)]) then begin
+          //showmessage('Holap, hay ruido! ' + inttostr(round(dataset[i, col])));
+          otros:= otros + 1;
+          continue;
+       end;
          contadores[round(dataset[i, col])]:= contadores[round(dataset[i, col])] + 1;
+
      end;
 
      //graficando
      //rgb propuesto para que cada una de las clases en teoria tenga un unico
      //color
      chart1barseries1.Clear;
+     Chart1.BottomAxis.Marks.Style := smsLabel;
+     Chart1.BottomAxis.Marks.Source := Chart1BarSeries1.Source;
+
      colF:= (5 * 3.1416 / 3) / (clases-1);
      for i:=0 to clases-1 do begin
          r:= Round(Sin(colF * i + (3.1416 / 2)) * 127 + 128);
          g := Round(Sin(colF * i + (3.1416 / 2) - (2.0 * 3.1416 / 3.0)) * 127 + 128);
          b := Round(Sin(colF * i + (3.1416 / 2) - (4.0 * 3.1416 / 3.0)) * 127 + 128);
          Chart1BarSeries1.Add(contadores[i], 'Clase: ' + inttostr(i), RGBToColor(r, g, b));
+         //showmessage('Hola!');
      end;
+
+     if otros > 0 then begin
+        r:=0;
+        g:=0;
+        b:=0;
+        Chart1BarSeries1.Add(otros, 'Otros: ?', RGBToColor(r, g, b));
+     end;
+
+
 
 
 
