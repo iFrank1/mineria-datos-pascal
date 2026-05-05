@@ -14,9 +14,13 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
+    Button1: TButton;
     Chart1: TChart;
     Chart1BarSeries1: TBarSeries;
+    Chart1LineSeries1: TLineSeries;
     ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
+    ComboBox3: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -38,8 +42,13 @@ type
     SaveDialog1: TSaveDialog;
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
+    procedure Button1Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure ComboBox2Change(Sender: TObject);
+    procedure ComboBox3Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure Label5Click(Sender: TObject);
+    procedure Label6Click(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem12Click(Sender: TObject);
@@ -50,6 +59,8 @@ type
     procedure MenuItem5Click(Sender: TObject);
     procedure MenuItem6Click(Sender: TObject);
     procedure MenuItem7Click(Sender: TObject);
+    procedure MenuItem8Click(Sender: TObject);
+    procedure MenuItem9Click(Sender: TObject);
   private
 
 
@@ -77,6 +88,10 @@ type
 
     //graficas
     procedure graficaBarras(fils, col, clases: integer);
+
+    procedure listaXYparaDisp();
+    procedure graficaDisper(fils, col1, col2: integer);
+
   end;
 
 var
@@ -88,8 +103,8 @@ var
 
 implementation
 
-uses
-  Unit2;
+{uses
+  Unit2;}
 
 {$R *.lfm}
 
@@ -100,7 +115,9 @@ procedure TForm1.cargarDatos(fils, cols: integer);
 var
   i,j: integer;
 begin
+
   SetLength(dataSet, fils, cols);
+  SetLength(dataNorm, fils, cols);
 
   //showmessage(inttostr(StringGrid1.RowCount)+ ' ' +  inttostr(StringGrid1.ColCount));
   //primero cargo todos los datos por si necesito las cabeceras y las clases
@@ -108,7 +125,7 @@ begin
   for i:=0 to fils-1 do begin
     for j:=0 to cols-1 do begin
       dataSet[i,j]:= StrToFloat(StringGrid1.Cells[j,i]);
-
+      dataNorm[i,j]:=dataSet[i,j];
     end;
   end;
   //showmessage(floattostr(dataSet[0,cols-1]));
@@ -207,11 +224,19 @@ procedure TForm1.sinNorm(fils, cols: integer);
 var
   i,j: integer;
 begin
+
+
   for j:=0 to cols-1 do begin
       for i:=0 to fils-1 do begin
           stringgrid1.cells[j,i]:= floattostr(dataSet[i+1,j]);
       end;
   end;
+  for i:=0 to fils-1 do begin
+      for j:=0 to cols-1 do begin
+          dataNorm[i,j]:= dataSet[i,j];
+      end;
+  end;
+
 
 end;
 
@@ -224,7 +249,7 @@ var
   norm: real;
 begin
 
-  setlength(dataNorm, fils, cols);
+
   for j:=0 to cols-1 do begin
     for i:=0 to fils-1 do begin
 
@@ -235,7 +260,7 @@ begin
       //z score
       norm := (dataSet[i+1,j] - StrToFloat(StringGrid2.Cells[j,0])) / StrToFloat(StringGrid2.Cells[j,1]);
       stringgrid1.Cells[j,i]:= FloatToStr(norm);
-      dataNorm[i,j]:= norm;
+      dataNorm[i+1,j]:= norm;
     end;
   end;
 end;
@@ -310,7 +335,7 @@ begin
      newMax:= StrToFloat(nuevoMax());
      newMin:= StrToFloat(nuevoMin());
 
-     setlength(dataNorm, fils, cols);
+
 
 
      for j:=0 to cols-1 do begin
@@ -328,7 +353,7 @@ begin
          //showMessage(floattostr(v));
               norm := (((v - minA) / (maxA - minA))*(newMax - newMin)) + newMin;
               stringgrid1.Cells[j,i]:= FloatToStr(norm);
-              dataNorm[i,j]:= norm;
+              dataNorm[i+1,j]:= norm;
          end;
 
      end;
@@ -386,8 +411,6 @@ var
    norm, maxA, j, v: real;
 begin
 
-     setlength(dataNorm, fils, cols);
-
      for k:=0 to cols-1 do begin
 
        maxA:= obtValAbsMax(fils, k);
@@ -405,7 +428,7 @@ begin
          //showMessage(floattostr(v));
          norm := v / power(10.0, j);
          stringgrid1.Cells[k,i]:= FloatToStr(norm);
-         dataNorm[i,k]:= norm;
+         dataNorm[i+1,k]:= norm;
        end;
      end;
 
@@ -420,43 +443,41 @@ var
    contadores: array of integer;
 begin
      contadores := nil;//solo para quitar la advertencia de abajo
-
-
      //showmessage(inttostr(fils) + ' ' + inttostr(cols)+' '+inttostr(clases));
      setLength(contadores, clases);
-
-
      otros:= 0;
-
-
-
      for i:=0 to clases-1 do begin
          contadores[i]:= 0;
      end;
 
      //salto la primera fila porque no es relevante para este paso
      for i:=1 to fils-1 do begin
-         //showmessage(inttostr(round(dataset[i, cols-1])));
+         //showmessage(inttostr(round(dataNorm[i, cols-1])));
 
          //showmessage('Hola no ando contando porque si tengo un 2 kbronazo! '
          //+ inttostr(length(contadores)));
          //error: no debemos modificar el tam cada que cuenta,
        //sino cada vez que es un numero diferente
-       if not (round(dataset[i, col]) in [0..(length(contadores)-1)]) then begin
-          //showmessage('Holap, hay ruido! ' + inttostr(round(dataset[i, col])));
+       //showmessage(inttostr(length(dataNorm)) + ' ' +inttostr(length(dataNorm[0])) + ' ' + inttostr(fils));
+       if not (round(dataNorm[i, col]) in [0..(length(contadores)-1)]) then begin
+          //showmessage('Holap, hay ruido! ' + inttostr(round(dataNorm[i, col])));
           otros:= otros + 1;
           continue;
        end;
-         contadores[round(dataset[i, col])]:= contadores[round(dataset[i, col])] + 1;
-
+         contadores[round(dataNorm[i, col])]:= contadores[round(dataNorm[i, col])] + 1;
+         //showmessage(inttostr(round(dataNorm[i, col])));
      end;
 
      //graficando
      //rgb propuesto para que cada una de las clases en teoria tenga un unico
      //color
+     chart1barseries1.Active:=true;
      chart1barseries1.Clear;
+
      Chart1.BottomAxis.Marks.Style := smsLabel;
      Chart1.BottomAxis.Marks.Source := Chart1BarSeries1.Source;
+     Chart1.BottomAxis.Title.Visible := False;
+     Chart1.LeftAxis.Title.Visible := False;
 
      colF:= (5 * 3.1416 / 3) / (clases-1);
      for i:=0 to clases-1 do begin
@@ -473,10 +494,65 @@ begin
         b:=0;
         Chart1BarSeries1.Add(otros, 'Otros: ?', RGBToColor(r, g, b));
      end;
+end;
+
+
+procedure TForm1.listaXYparaDisp();
+var
+   k, index, j: integer;
+begin
+       ubcols := nil;
+       setlength(ubcols, 0);
+       index:=-1;
+
+       combobox2.Items.Clear;
+       combobox3.Items.Clear;
+       k:=0;
+       //agregar valores para x/y
+       for j:=0 to stringgrid1.ColCount do begin
+           index:=index + 1;
+           //volvemos a saltar no numericos
+           if dataNorm[0,j] <> 0 then begin
+              continue;
+           end;
+           setlength(ubCols, k + 1);
+           ubCols[k]:=index;
+           k:=k+1;
+           combobox2.items.add('Atributo X: ' + inttostr(k));
+           combobox3.items.add('Atributo Y: ' + inttostr(k));
+       end;
+       combobox2.Visible:=True;
+       combobox3.Visible:=True;
+       button1.Visible:=True;
 
 
 
+end;
 
+procedure TForm1.graficaDisper(fils, col1, col2: integer);
+var
+   i,x,y: integer;
+begin
+     x:= ubCols[col1];
+     y:= ubCOls[col2];
+
+     //showmessage(inttostr(x) + ' ' + inttostr(y));
+     Chart1LineSeries1.Active:=True;
+     Chart1LineSeries1.Clear;
+
+     Chart1.BottomAxis.Marks.Source := nil;
+
+     Chart1.BottomAxis.Marks.Style := smsValue;
+     Chart1.BottomAxis.Title.Visible := True;
+     Chart1.BottomAxis.Title.Caption := ComboBox2.Text;
+
+     Chart1.LeftAxis.Marks.Style := smsValue;
+     Chart1.LeftAxis.Title.Visible := True;
+     Chart1.LeftAxis.Title.Caption := ComboBox3.Text;
+
+     for i := 1 to fils-1 do begin
+         Chart1LineSeries1.AddXY(dataNorm[i, x], dataNorm[i, y]);
+    end;
 
 end;
 
@@ -499,80 +575,44 @@ begin
 
 end;
 
+procedure TForm1.Label5Click(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.Label6Click(Sender: TObject);
+begin
+
+end;
+
 procedure TForm1.ComboBox1Change(Sender: TObject);
 var
    clases: integer;
 begin
 
-  clases:= round(dataset[0,ubcOLs[combobox1.itemindex]]);
+  clases:= round(dataNorm[0,ubcOLs[combobox1.itemindex]]);
   //showmessage(inttostr(clases) + ' en la ubi ' + inttostr(ubcOLs[combobox1.itemindex]));
-  graficaBarras(round(length(dataset)), ubcOLs[combobox1.itemindex], clases);
+
+  graficaBarras(round(length(dataNorm)), ubcOLs[combobox1.itemindex], clases);
 end;
 
-procedure TForm1.MenuItem10Click(Sender: TObject);
-var
-   j,k, index: integer;
 
+
+procedure TForm1.ComboBox2Change(Sender: TObject);
 begin
-  //showmessage(floattostr(dataset[0,stringgrid1.ColCount+1]));
-  ubcols := nil;//quitar adv
-  setlength(ubcols, 0);
-  k:=0;
-  index:=-1;
-  combobox1.Items.Clear;
-  label4.Caption:='Barras:';
-
-  for j:=0 to stringgrid1.ColCount do begin
-      //gracioso porque ahora saltamos numericos
-      index:=index+1;
-      if dataSet[0,j] = 0 then begin
-           continue;
-      end;
-
-      setLength(ubCols, Length(ubcols) + 1);
-      ubCols[k]:= index;
-      k:=k+1;
-      //clases:= round(dataset[0,j]);
-      combobox1.items.add('Atributo: ' + inttostr(k) {+' Clases'+ inttostr(clases)});
-      //combobox1.items.add('Col j: ' + inttostr(ubCols[k-1]));
-  end;
 
 end;
 
-procedure TForm1.MenuItem11Click(Sender: TObject);
+procedure TForm1.ComboBox3Change(Sender: TObject);
 begin
-  sinNorm(stringgrid1.RowCount, stringgrid1.ColCount);
-  MenuItem11.Checked:=True;
-  MenuItem5.Checked:=False;
-  MenuItem6.Checked:=False;
-  MenuItem7.Checked:=False;
+
 end;
 
 
-//Guardar archivo del string grid
-procedure TForm1.MenuItem12Click(Sender: TObject);
-var
-   i: integer;
-begin
-  if savedialog1.Execute then begin
-    AssignFile(F,Savedialog1.FileName);
 
-    {$I-}
-         rewrite(F);  //crear archivo...si existe Sobre escribe y destruye
-    {$I+}
 
-    if IOResult=0 then
-    begin
 
-      for i:= 0 to stringgrid1.RowCount-1 do begin
 
-        Writeln(F,stringgrid1.Rows[i].CommaText);
-
-      end;
-      closefile(F);
-    end;
-  end;
-end;
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
 begin
@@ -616,6 +656,125 @@ begin
   MenuItem6.Checked:=False;
   MenuItem7.Checked:=True;
 
+end;
+//Dispersión
+procedure TForm1.MenuItem8Click(Sender: TObject);
+begin
+
+       ComboBox1.visible:= false;
+       MenuItem8.Checked:=True;
+       MenuItem9.Checked:=False;
+       MenuItem10.Checked:=False;
+
+       chart1barseries1.Clear;
+       chart1barseries1.Active:=False;
+
+       label4.Caption:='Dispersión:';
+       listaXYparaDisp();
+
+
+end;
+
+//inicia dispersijn
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+
+
+  if ComboBox2.ItemIndex = ComboBox3.ItemIndex then
+  begin
+       ShowMessage('Por favor, elige dos atributos distintos. (˶º⤙º˶)');
+       Exit;//no ejecuta lo de abajo
+  end;
+  graficaDisper(round(length(dataNorm)), combobox2.ItemIndex, combobox3.itemindex);
+
+
+
+end;
+
+
+//box plot
+procedure TForm1.MenuItem9Click(Sender: TObject);
+begin
+     MenuItem8.Checked:=False;
+     MenuItem9.Checked:=True;
+     MenuItem10.Checked:=False;
+     label4.Caption:='BoxPlot:';
+end;
+
+//BARRAS
+procedure TForm1.MenuItem10Click(Sender: TObject);
+var
+   j,k, index: integer;
+
+begin
+
+  MenuItem8.Checked:=False;
+  MenuItem9.Checked:=False;
+  MenuItem10.Checked:=True;
+  ComboBox1.Visible:= True;
+  ComboBox2.Visible:= False;
+  ComboBox3.Visible:= False;
+  Button1.Visible:=False;
+
+  Chart1LineSeries1.Clear;
+  Chart1LineSeries1.Active:=False;
+  //showmessage(floattostr(dataset[0,stringgrid1.ColCount+1]));
+  ubcols := nil;//quitar adv
+  setlength(ubcols, 0);
+  k:=0;
+  index:=-1;
+  combobox1.Items.Clear;
+  label4.Caption:='Barras:';
+
+  for j:=0 to stringgrid1.ColCount do begin
+      //gracioso porque ahora saltamos numericos
+      index:=index+1;
+      if dataNorm[0,j] = 0 then begin
+           continue;
+      end;
+
+      setLength(ubCols, Length(ubcols) + 1);
+      ubCols[k]:= index;
+      k:=k+1;
+      //clases:= round(dataset[0,j]);
+      combobox1.items.add('Atributo: ' + inttostr(k) {+' Clases'+ inttostr(clases)});
+      //combobox1.items.add('Col j: ' + inttostr(ubCols[k-1]));
+  end;
+
+end;
+//quitar normalizacion
+procedure TForm1.MenuItem11Click(Sender: TObject);
+begin
+  sinNorm(stringgrid1.RowCount, stringgrid1.ColCount);
+  MenuItem11.Checked:=True;
+  MenuItem5.Checked:=False;
+  MenuItem6.Checked:=False;
+  MenuItem7.Checked:=False;
+end;
+
+//Guardar archivo del string grid
+procedure TForm1.MenuItem12Click(Sender: TObject);
+var
+   i: integer;
+begin
+  if savedialog1.Execute then begin
+    AssignFile(F,Savedialog1.FileName);
+
+    {$I-}
+         rewrite(F);  //crear archivo...si existe Sobre escribe y destruye
+    {$I+}
+
+    if IOResult=0 then
+    begin
+
+      for i:= 0 to stringgrid1.RowCount-1 do begin
+
+        Writeln(F,stringgrid1.Rows[i].CommaText);
+
+      end;
+      closefile(F);
+    end;
+  end;
 end;
 
 end.

@@ -3,7 +3,6 @@ object Form1: TForm1
   Height = 552
   Top = 193
   Width = 908
-  AutoSize = True
   Caption = 'Form1'
   ClientHeight = 552
   ClientWidth = 908
@@ -73,6 +72,7 @@ object Form1: TForm1
     ItemHeight = 15
     TabOrder = 2
     Text = 'Atributos'
+    Visible = False
     OnChange = ComboBox1Change
   end
   object Chart1: TChart
@@ -91,6 +91,7 @@ object Form1: TForm1
         Alignment = calBottom
         Marks.LabelFont.Orientation = 900
         Marks.Format = '%2:s'
+        Marks.LabelBrush.Style = bsClear
         Marks.Style = smsLabel
         Minors = <>
         Title.LabelBrush.Style = bsClear
@@ -111,6 +112,51 @@ object Form1: TForm1
       Marks.Frame.Visible = False
       Marks.Style = smsValue
     end
+    object Chart1LineSeries1: TLineSeries
+      LinePen.Style = psClear
+      Pointer.Brush.Color = clRed
+      Pointer.HorizSize = 3
+      Pointer.Pen.Color = clBlue
+      Pointer.Style = psCircle
+      Pointer.VertSize = 3
+      Pointer.Visible = True
+      ShowPoints = True
+    end
+  end
+  object ComboBox2: TComboBox
+    Left = 568
+    Height = 23
+    Top = 9
+    Width = 100
+    ItemHeight = 15
+    TabOrder = 4
+    Text = 'X'
+    Visible = False
+    OnChange = ComboBox2Change
+  end
+  object ComboBox3: TComboBox
+    Left = 696
+    Height = 23
+    Top = 9
+    Width = 100
+    ItemHeight = 15
+    TabOrder = 5
+    Text = 'Y'
+    Visible = False
+    OnChange = ComboBox3Change
+  end
+  object Button1: TButton
+    Cursor = crHandPoint
+    Left = 808
+    Height = 25
+    Top = 9
+    Width = 24
+    Caption = '✔'
+    Font.Color = clRed
+    ParentFont = False
+    TabOrder = 6
+    Visible = False
+    OnClick = Button1Click
   end
   object MainMenu1: TMainMenu
     Left = 96
@@ -152,9 +198,11 @@ object Form1: TForm1
       Caption = 'Gráficas'
       object MenuItem8: TMenuItem
         Caption = 'Dispersión'
+        OnClick = MenuItem8Click
       end
       object MenuItem9: TMenuItem
         Caption = 'BoxPlot'
+        OnClick = MenuItem9Click
       end
       object MenuItem10: TMenuItem
         Caption = 'Barras'
