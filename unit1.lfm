@@ -122,6 +122,8 @@ object Form1: TForm1
       Pointer.Visible = True
       ShowPoints = True
     end
+    object Chart1BoxAndWhiskerSeries1: TBoxAndWhiskerSeries
+    end
   end
   object ComboBox2: TComboBox
     Left = 568
@@ -157,6 +159,26 @@ object Form1: TForm1
     TabOrder = 6
     Visible = False
     OnClick = Button1Click
+  end
+  object Button2: TButton
+    Left = 536
+    Height = 23
+    Top = 9
+    Width = 25
+    Caption = 'GO'
+    TabOrder = 7
+    Visible = False
+    OnClick = Button2Click
+  end
+  object ComboBox4: TComboBox
+    Left = 341
+    Height = 23
+    Top = 34
+    Width = 100
+    ItemHeight = 15
+    TabOrder = 8
+    Text = 'Atributos'
+    Visible = False
   end
   object MainMenu1: TMainMenu
     Left = 96

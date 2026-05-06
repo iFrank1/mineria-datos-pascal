@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, Grids, StdCtrls,
-  ComCtrls, RTTICtrls, TASeries, TAGraph, Math, TAChartUtils;
+  ComCtrls, RTTICtrls, TASeries, TAGraph, Math, TAChartUtils, TAMultiSeries;
 
 type
   matrizDatos = array of array of real;
@@ -15,12 +15,15 @@ type
 
   TForm1 = class(TForm)
     Button1: TButton;
+    Button2: TButton;
     Chart1: TChart;
     Chart1BarSeries1: TBarSeries;
+    Chart1BoxAndWhiskerSeries1: TBoxAndWhiskerSeries;
     Chart1LineSeries1: TLineSeries;
     ComboBox1: TComboBox;
     ComboBox2: TComboBox;
     ComboBox3: TComboBox;
+    ComboBox4: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -43,6 +46,7 @@ type
     StringGrid1: TStringGrid;
     StringGrid2: TStringGrid;
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure ComboBox3Change(Sender: TObject);
@@ -91,6 +95,9 @@ type
 
     procedure listaXYparaDisp();
     procedure graficaDisper(fils, col1, col2: integer);
+
+    procedure listaBP();
+    procedure graficaBoxPlot(fils, clases, atriSelect: integer);
 
   end;
 
@@ -529,6 +536,34 @@ begin
 
 end;
 
+procedure TForm1.listaBP();
+var
+   k, index, j: integer;
+begin
+  ubcols := nil;
+  setlength(ubcols, 0);
+  index:=-1;
+
+  combobox4.Items.Clear;
+
+  k:=0;
+
+  for j:=0 to stringgrid1.ColCount do begin
+      index:=index + 1;
+      //volvemos a saltar no numericos
+      if dataNorm[0,j] <> 0 then begin
+         continue;
+      end;
+      setlength(ubCols, k + 1);
+      ubCols[k]:=index;
+      k:=k+1;
+      combobox4.items.add('Atributo: ' + inttostr(k));
+
+  end;
+  combobox4.Visible:=True;
+  //button1.Visible:=True;
+end;
+
 procedure TForm1.graficaDisper(fils, col1, col2: integer);
 var
    i,x,y: integer;
@@ -556,6 +591,39 @@ begin
 
 end;
 
+procedure TForm1.graficaBoxPlot(fils, clases, atriSelect: integer);
+var
+   i, queClase, colRe, lc, s: integer;
+   allBpts: array of array of real;
+   contadores: array of Integer;
+begin
+     allBpts:= nil;
+     contadores:= nil;
+     lc:=length(dataNorm[0])-1;
+     showmessage(inttostr(lc));
+
+     colRe:= ubCols[atriSelect];
+     SetLength(allBpts, clases);
+     SetLength(contadores, clases);
+     //WriteLn(length(contadores), dataNorm[fils-1, 0]);
+     for i:=0 to clases-1 do begin
+       contadores[i]:= 0;
+     end;
+
+     s:=0;
+     for i:=1 to fils-1 do begin
+       queClase:= round(dataNorm[i,lc]);
+       INC(contadores[queClase]);
+
+     end;
+
+     for i:= 0 to clases-1 do begin
+       //WriteLn(i, ' ', contadores[i]);
+       s:=s+contadores[i];
+     end;
+     //WriteLn(s, ' ', stringgrid1.RowCount);
+end;
+
 //interaccion de elementos de la gui con funciones
 
 procedure TForm1.MenuItem2Click(Sender: TObject);
@@ -569,6 +637,7 @@ begin
   end;
 
 end;
+
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
@@ -668,6 +737,8 @@ begin
 
        chart1barseries1.Clear;
        chart1barseries1.Active:=False;
+       Chart1BoxAndWhiskerSeries1.Clear;
+       Chart1BoxAndWhiskerSeries1.Active:=False;
 
        label4.Caption:='Dispersión:';
        listaXYparaDisp();
@@ -691,14 +762,41 @@ begin
 
 end;
 
+procedure TForm1.Button2Click(Sender: TObject);
+var
+   clases: integer;
+begin
+  clases:= round(dataNorm[0,length(dataNorm[0])-1]);
+  //showmessage(inttostr(round(length(dataNorm))));
+  graficaBoxPlot(round(length(dataNorm)), clases, combobox1.ItemIndex);
+end;
+
 
 //box plot
 procedure TForm1.MenuItem9Click(Sender: TObject);
 begin
+     ComboBox4.Clear;
+     ComboBox4.visible:= True;
+     //vamoa reusar el com1
+     ComboBox1.Visible:= False;
+     ComboBox2.Visible:= False;
+     ComboBox3.Visible:= False;
+     Button1.Visible:=False;
+
      MenuItem8.Checked:=False;
      MenuItem9.Checked:=True;
      MenuItem10.Checked:=False;
      label4.Caption:='BoxPlot:';
+     Button2.Visible:=True;
+
+     Chart1BoxAndWhiskerSeries1.Clear;
+     Chart1BoxAndWhiskerSeries1.Active:=True;
+     Chart1LineSeries1.Clear;
+     Chart1LineSeries1.Active:=False;
+     chart1barseries1.Clear;
+     chart1barseries1.Active:=False;
+
+     listaBP();
 end;
 
 //BARRAS
@@ -718,6 +816,9 @@ begin
 
   Chart1LineSeries1.Clear;
   Chart1LineSeries1.Active:=False;
+  Chart1BoxAndWhiskerSeries1.Clear;
+  Chart1BoxAndWhiskerSeries1.Active:=False;
+
   //showmessage(floattostr(dataset[0,stringgrid1.ColCount+1]));
   ubcols := nil;//quitar adv
   setlength(ubcols, 0);
