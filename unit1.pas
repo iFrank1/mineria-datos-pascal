@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, Grids, StdCtrls,
-  ComCtrls, RTTICtrls, TASeries, TAGraph, Math, TAChartUtils, TAMultiSeries;
+  ComCtrls, RTTICtrls, TASeries, TAGraph, Math, TAChartUtils, TAMultiSeries, Unit2;
 
 type
   matrizDatos = array of array of real;
@@ -593,23 +593,27 @@ end;
 
 procedure TForm1.graficaBoxPlot(fils, clases, atriSelect: integer);
 var
-   i, queClase, colRe, lc, s: integer;
-   allBpts: array of array of real;
+   i, queClase, colRe, lc, s, ubMitad: integer;
+   allBoxes: array of array of real;
    contadores: array of Integer;
+   valEnFila, min, max, mediana: real;
 begin
-     allBpts:= nil;
+     allBoxes:= nil;
      contadores:= nil;
+
      lc:=length(dataNorm[0])-1;
      showmessage(inttostr(lc));
 
      colRe:= ubCols[atriSelect];
-     SetLength(allBpts, clases);
+     SetLength(allBoxes, clases);
      SetLength(contadores, clases);
      //WriteLn(length(contadores), dataNorm[fils-1, 0]);
      for i:=0 to clases-1 do begin
        contadores[i]:= 0;
      end;
-
+     //contamos cuantos valores hay de cada clase en la columna selecta
+     //si son 11 primero sacamos a que clase pertenece para aprovechar que va
+     //de 0 a n-1 y ahi mismo contar
      s:=0;
      for i:=1 to fils-1 do begin
        queClase:= round(dataNorm[i,lc]);
@@ -617,12 +621,69 @@ begin
 
      end;
 
-     for i:= 0 to clases-1 do begin
+     {for i:= 0 to clases-1 do begin
        //WriteLn(i, ' ', contadores[i]);
        s:=s+contadores[i];
-     end;
+     end;}
      //WriteLn(s, ' ', stringgrid1.RowCount);
+     //una vez que ya sabemos cuantos valores hay de cada clase en la columna
+     //selecta ahora vamos a hacer otros arreglos donde vamos a guardar
+     //los n valores flotantes de cada clase
+     for i:=0 to clases-1 do begin
+         setlength(allBoxes[i], contadores[i]);
+       contadores[i]:=0;
+     end;
+     //aqui empezamos a extraer los valores flotantes de cada clase
+     //poniendolos en donde les corresponde
+     for i:=1 to fils-1 do begin
+         queClase:= round(dataNorm[i,lc]);
+         valEnFila:= dataNorm[i, colRe];
+
+         allBoxes[queClase][contadores[queClase]]:=valEnFila;
+
+         Inc(Contadores[queClase]);
+
+         //los contadores[claseActual] van a empezar en 0 y no importa es
+         //como si tuvieramos mucho i,j,k para cada clase. No importa tanto
+         //que tanto crezca con inc porque teoricamente solo llegaria hasta
+         //los n elementos de dicha clase que haya
+     end;
+     for i:=0 to clases-1 do begin
+       for s:=0 to length(allboxes[i])-1 do begin
+         writeln('clase ', i, ' ', allBoxes[i][s]);
+       end;
+     end;
+
+     //ordenamos para las medianasssss y vamos graficando finalmente
+     //todo a la par X_X
+
+     for i:=0 to clases-1 do begin
+       QuickSort(allboxes[i], 0, Contadores[i] - 1);
+       min:= allboxes[i][0];
+       max:= allboxes[i][contadores[i]-1];
+
+       ubMitad:= (contadores[i]-1) div 2;
+
+       if (contadores[i]) mod 2 = 0 then begin
+          mediana:=  (allboxes[i][ubMitad] + allboxes[i][ubMitad+1]) / 2.0;
+       end
+       else begin
+         mediana:=  allboxes[i][ubMitad];
+
+       end;
+
+       for s:=0 to length(allboxes[i])-1 do begin
+         writeln(s, 'clase ', i, ' ', allBoxes[i][s]);
+       end;
+       writeln();
+       writeln(' ', (contadores[i]-1) mod 2, ' min: ',min, 'max',max,  'mediana', mediana);
+       writeln('elementos de la clase ', s, 'Mitad ', ubMitad, ' ' ,contadores[i]-1 , ' ', allboxes[i][ubMitad]);
+     end;
+
+
 end;
+
+
 
 //interaccion de elementos de la gui con funciones
 
