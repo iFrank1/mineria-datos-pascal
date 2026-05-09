@@ -593,17 +593,17 @@ end;
 
 procedure TForm1.graficaBoxPlot(fils, clases, atriSelect: integer);
 var
-   i, queClase, colRe, lc, s, ubMitad: integer;
+   i, queClase, colRe, lc, s, ubMitad, ubMitadq1: integer;
    allBoxes: array of array of real;
    contadores: array of Integer;
-   valEnFila, min, max, mediana: real;
+   valEnFila, min, max, mediana, q1, q3: real;
 begin
      allBoxes:= nil;
      contadores:= nil;
 
      lc:=length(dataNorm[0])-1;
-     showmessage(inttostr(lc));
-
+     //showmessage(inttostr(lc));
+     //showmessage(inttostr(atriSelect));
      colRe:= ubCols[atriSelect];
      SetLength(allBoxes, clases);
      SetLength(contadores, clases);
@@ -664,6 +664,7 @@ begin
 
        ubMitad:= (contadores[i]-1) div 2;
 
+       //calculo de la mediana
        if (contadores[i]) mod 2 = 0 then begin
           mediana:=  (allboxes[i][ubMitad] + allboxes[i][ubMitad+1]) / 2.0;
        end
@@ -672,12 +673,54 @@ begin
 
        end;
 
+       //se calcula q1, media de la mitad izq
+       ubMitadq1:= ((contadores[i] div 2) - 1) div 2;
+
+       if (contadores[i] div 2) mod 2 = 0 then begin
+          q1:= (allboxes[i][ubMitadq1] + allboxes[i][ubMitadq1 + 1]) / 2.0;
+       end
+       else begin
+         q1:= allboxes[i][ubMitadq1];
+       end;
+
+
+       {
+       DEBUGGGG, IGNORARRRR
+       para sacar q3 habra que hacer una suma,
+       basicamente es la ubicacion de la mitad de los datos + la mitad de la
+       mitad lo que en teoria va dando el 75
+       si la cantidad de elementos es impar se hace un promedio entonces hay
+       una media con ubicacion real y pues misma cantidad de elementos de un
+       lado que del otro
+       cu... lo termino en libreta}
+      s:= contadores[i] - (contadores[i] div 2);
+
+       if (contadores[i] div 2) mod 2 = 0 then begin
+          q3:= (allboxes[i][s + ubMitadq1] + allboxes[i][s + ubMitadq1 + 1]) / 2.0;
+       end
+       else begin
+         q3:= allboxes[i][s + ubMitadq1];
+
+       end;
+
+       
+       {
+       DEBUGGGG, IGNORARRRR
        for s:=0 to length(allboxes[i])-1 do begin
          writeln(s, 'clase ', i, ' ', allBoxes[i][s]);
        end;
+
+       //parece qeu se puedenn truncar valroes reales, aqui se hace a modo
+       //de visualizaicon nada mas min:0:2
+
        writeln();
-       writeln(' ', (contadores[i]) mod 2, ' min: ',min, 'max',max,  'mediana', mediana);
-       writeln('elementos de la clase ', s, 'Mitad ', ubMitad, ' ' ,contadores[i]-1 , ' ', allboxes[i][ubMitad]);
+       writeln(' ', (contadores[i]) mod 2, ' min:', min:0:2, ' q1: ', q1:0:2, ' mediana: ', mediana:0:2, ' q3: ', q3:0:2, ' max: ', max:0:2);
+       writeln('elementos de la clase ', contadores[i], ' Mitad ', ubMitad,' ', contadores[i]-1, ' ', allboxes[i][ubMitad]);
+       }
+
+       //FINALMENTE GRAFICO, FAK VIEJON
+       Chart1BoxAndWhiskerSeries1.AddXY(i, min, q1, mediana, q3, max);
+
      end;
 
 
@@ -715,6 +758,8 @@ begin
 
 end;
 
+
+//BARRRRRRAS
 procedure TForm1.ComboBox1Change(Sender: TObject);
 var
    clases: integer;
@@ -800,6 +845,7 @@ begin
        chart1barseries1.Active:=False;
        Chart1BoxAndWhiskerSeries1.Clear;
        Chart1BoxAndWhiskerSeries1.Active:=False;
+       ComboBox4.visible:= false;  Button2.Visible:= False;
 
        label4.Caption:='Dispersión:';
        listaXYparaDisp();
@@ -822,14 +868,15 @@ begin
 
 
 end;
-
+//boton para inciar BOXPLOTSSS
 procedure TForm1.Button2Click(Sender: TObject);
 var
    clases: integer;
 begin
   clases:= round(dataNorm[0,length(dataNorm[0])-1]);
   //showmessage(inttostr(round(length(dataNorm))));
-  graficaBoxPlot(round(length(dataNorm)), clases, combobox1.ItemIndex);
+  Chart1BoxAndWhiskerSeries1.Clear;
+  graficaBoxPlot(round(length(dataNorm)), clases, combobox4.ItemIndex);
 end;
 
 
@@ -873,7 +920,9 @@ begin
   ComboBox1.Visible:= True;
   ComboBox2.Visible:= False;
   ComboBox3.Visible:= False;
+  ComboBox4.visible:= false;
   Button1.Visible:=False;
+  Button2.Visible:= False;
 
   Chart1LineSeries1.Clear;
   Chart1LineSeries1.Active:=False;
