@@ -676,7 +676,7 @@ begin
          writeln(s, 'clase ', i, ' ', allBoxes[i][s]);
        end;
        writeln();
-       writeln(' ', (contadores[i]-1) mod 2, ' min: ',min, 'max',max,  'mediana', mediana);
+       writeln(' ', (contadores[i]) mod 2, ' min: ',min, 'max',max,  'mediana', mediana);
        writeln('elementos de la clase ', s, 'Mitad ', ubMitad, ' ' ,contadores[i]-1 , ' ', allboxes[i][ubMitad]);
      end;
 
