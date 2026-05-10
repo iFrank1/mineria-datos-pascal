@@ -165,7 +165,7 @@ object Form1: TForm1
     Height = 23
     Top = 9
     Width = 25
-    Caption = 'GO'
+    Caption = '✔'
     TabOrder = 7
     Visible = False
     OnClick = Button2Click
@@ -180,6 +180,16 @@ object Form1: TForm1
     Text = 'Atributos'
     Visible = False
   end
+  object Button3: TButton
+    Left = 341
+    Height = 25
+    Top = 63
+    Width = 100
+    Caption = 'BoxPlot general'
+    TabOrder = 9
+    Visible = False
+    OnClick = Button3Click
+  end
   object MainMenu1: TMainMenu
     Left = 96
     Top = 456
@@ -191,11 +201,13 @@ object Form1: TForm1
       end
       object MenuItem12: TMenuItem
         Caption = 'Guardar datos'
+        Enabled = False
         OnClick = MenuItem12Click
       end
     end
     object MenuItem4: TMenuItem
       Caption = 'Normalización'
+      Enabled = False
       OnClick = MenuItem4Click
       object MenuItem11: TMenuItem
         Caption = 'Ninguna'
@@ -218,6 +230,7 @@ object Form1: TForm1
     end
     object MenuItem3: TMenuItem
       Caption = 'Gráficas'
+      Enabled = False
       object MenuItem8: TMenuItem
         Caption = 'Dispersión'
         OnClick = MenuItem8Click

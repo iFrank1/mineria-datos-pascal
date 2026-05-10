@@ -16,6 +16,7 @@ type
   TForm1 = class(TForm)
     Button1: TButton;
     Button2: TButton;
+    Button3: TButton;
     Chart1: TChart;
     Chart1BarSeries1: TBarSeries;
     Chart1BoxAndWhiskerSeries1: TBoxAndWhiskerSeries;
@@ -47,6 +48,7 @@ type
     StringGrid2: TStringGrid;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure ComboBox3Change(Sender: TObject);
@@ -98,6 +100,7 @@ type
 
     procedure listaBP();
     procedure graficaBoxPlot(fils, clases, atriSelect: integer);
+    procedure graficaBoxPlotGeneral(fils, cols: integer);
 
   end;
 
@@ -342,18 +345,15 @@ begin
      newMax:= StrToFloat(nuevoMax());
      newMin:= StrToFloat(nuevoMin());
 
-
-
-
      for j:=0 to cols-1 do begin
          maxA:= maximoColumna(fils, j);
          minA:= minimoColumna(fils, j);
          for i:=0 to fils-1 do begin
 
          //saltar no numericos
-                  if dataSet[0,j] <> 0 then begin
-                     continue;
-                  end;
+             if dataSet[0,j] <> 0 then begin
+                continue;
+             end;
 
          //min max
                v:= dataSet[i+1,j];
@@ -417,7 +417,6 @@ var
    i, k: integer;
    norm, maxA, j, v: real;
 begin
-
      for k:=0 to cols-1 do begin
 
        maxA:= obtValAbsMax(fils, k);
@@ -572,8 +571,6 @@ begin
      y:= ubCOls[col2];
 
      //showmessage(inttostr(x) + ' ' + inttostr(y));
-     Chart1LineSeries1.Active:=True;
-     Chart1LineSeries1.Clear;
 
      Chart1.BottomAxis.Marks.Source := nil;
 
@@ -598,6 +595,7 @@ var
    contadores: array of Integer;
    valEnFila, min, max, mediana, q1, q3: real;
 begin
+
      allBoxes:= nil;
      contadores:= nil;
 
@@ -719,13 +717,91 @@ begin
        }
 
        //FINALMENTE GRAFICO, FAK VIEJON
-       Chart1BoxAndWhiskerSeries1.AddXY(i, min, q1, mediana, q3, max);
+       Chart1.BottomAxis.Marks.Source := nil;
+       Chart1.BottomAxis.Title.Visible := True;
+       Chart1.BottomAxis.Title.Caption := 'Clases';
+       Chart1.BottomAxis.Marks.Style := smsValue;
+
+
+       Chart1.LeftAxis.Title.Visible := True;
+       Chart1.LeftAxis.Title.Caption := 'Valor';
+
+       Chart1BoxAndWhiskerSeries1.AddXY(i, min, q1, mediana, q3, max, IntToStr(i));
 
      end;
 
 
 end;
 
+procedure TForm1.graficaBoxPlotGeneral(fils, cols: integer);
+var
+   i, j, s, n, ubMitad, ubMitadq1: integer;
+   ArregloGlobal: array of real;
+   min, max, mediana, q1, q3: real;
+begin
+     ArregloGlobal:= nil;
+     setlength(ArregloGlobal, fils);
+
+     for i:=0 to cols-1 do begin
+       n:= 0;
+       if dataNorm[0,i] <> 0 then begin
+           continue;
+       end;
+       for j:=1 to fils-1 do begin
+           //showmessage(inttostr(n));
+
+           arregloGlobal[n]:= dataNorm[j,i];
+           n := n + 1;
+       end;
+
+       QuickSort(arregloGlobal, 0, n-1);
+       min:= arregloGlobal[0];
+       max:= arregloGlobal[n-1];
+
+       ubMitad:= (n-1) div 2;
+
+       //calculo de la mediana
+       if (n) mod 2 = 0 then begin
+          mediana:=  (arregloGlobal[ubMitad] + arregloGlobal[ubMitad+1]) / 2.0;
+       end
+       else begin
+         mediana:=  arregloGlobal[ubMitad];
+
+       end;
+
+       //se calcula q1, media de la mitad izq
+       ubMitadq1:= ((n div 2)-1) div 2;
+
+       if (n div 2)mod 2 =0 then begin
+          q1:= (arregloGlobal[ubMitadq1] + arregloGlobal[ubMitadq1 + 1]) / 2.0;
+       end
+       else begin
+         q1:= arregloGlobal[ubMitadq1];
+       end;
+
+      s:= n - (n div 2);
+
+       if (n div 2) mod 2 = 0 then begin
+          q3:= (arregloGlobal[s + ubMitadq1] + arregloGlobal[s + ubMitadq1 + 1]) / 2.0;
+       end
+       else begin
+         q3:= arregloGlobal[s + ubMitadq1];
+
+       end;
+       //FINALMENTE GRAFICO, FAK VIEJON
+       Chart1.BottomAxis.Marks.Source := nil;
+       Chart1.BottomAxis.Title.Visible := True;
+       Chart1.BottomAxis.Title.Caption := 'Columnas';
+       Chart1.BottomAxis.Marks.Style := smsValue;
+       
+
+       Chart1.LeftAxis.Title.Visible := True;
+       Chart1.LeftAxis.Title.Caption := 'Valor';
+
+       Chart1BoxAndWhiskerSeries1.AddXY(i, min, q1, mediana, q3, max, IntToStr(i));
+
+     end;
+end;
 
 
 //interaccion de elementos de la gui con funciones
@@ -738,6 +814,11 @@ begin
     cargarDatos(stringgrid1.RowCount, stringgrid1.ColCount);
     calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
     calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
+    //activamos otros botones luego de que ya hay info
+    MenuItem3.Enabled:=True;
+    MenuItem4.Enabled:=True;
+    MenuItem12.Enabled:=True;
   end;
 
 end;
@@ -767,7 +848,12 @@ begin
 
   clases:= round(dataNorm[0,ubcOLs[combobox1.itemindex]]);
   //showmessage(inttostr(clases) + ' en la ubi ' + inttostr(ubcOLs[combobox1.itemindex]));
-
+  chart1barseries1.Clear;
+  chart1barseries1.Active:=True;
+  Chart1LineSeries1.Clear;
+  Chart1LineSeries1.Active:=False;
+  Chart1BoxAndWhiskerSeries1.Clear;
+  Chart1BoxAndWhiskerSeries1.Active:=False;
   graficaBarras(round(length(dataNorm)), ubcOLs[combobox1.itemindex], clases);
 end;
 
@@ -832,6 +918,99 @@ begin
   MenuItem7.Checked:=True;
 
 end;
+
+
+//inicia dispersijn
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if (ComboBox2.ItemIndex = -1) or (ComboBox3.ItemIndex = -1) then
+  begin
+       ShowMessage('Por favor, elige un atributo válido. (˶º⤙º˶)');
+       Exit;//no ejecuta lo de abajo
+  end;
+
+  if ComboBox2.ItemIndex = ComboBox3.ItemIndex then
+  begin
+       ShowMessage('Por favor, elige dos atributos distintos. (˶º⤙º˶)');
+       Exit;//no ejecuta lo de abajo
+  end;
+
+  chart1barseries1.Clear;
+  chart1barseries1.Active:=False;
+  Chart1BoxAndWhiskerSeries1.Clear;
+  Chart1BoxAndWhiskerSeries1.Active:=False;
+  Chart1LineSeries1.Active:=True;
+  Chart1LineSeries1.Clear;
+
+  graficaDisper(round(length(dataNorm)), combobox2.ItemIndex, combobox3.itemindex);
+
+
+
+end;
+//boton para inciar BOXPLOTSSS
+procedure TForm1.Button2Click(Sender: TObject);
+var
+   clases: integer;
+begin
+  if combobox4.ItemIndex = -1 then
+  begin
+       ShowMessage('Por favor, elige un atributo válido. (˶º⤙º˶)');
+       Exit;//no ejecuta lo de abajo
+  end;
+  clases:= round(dataNorm[0,length(dataNorm[0])-1]);
+  //showmessage(inttostr(round(length(dataNorm))));
+
+  Chart1BoxAndWhiskerSeries1.Clear;
+  Chart1BoxAndWhiskerSeries1.Active:=True;
+  Chart1LineSeries1.Clear;
+  Chart1LineSeries1.Active:=False;
+  chart1barseries1.Clear;
+  chart1barseries1.Active:=False;
+
+  graficaBoxPlot(round(length(dataNorm)), clases, combobox4.ItemIndex);
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+
+  Chart1BoxAndWhiskerSeries1.Clear;
+  Chart1BoxAndWhiskerSeries1.Active:=True;
+  Chart1LineSeries1.Clear;
+  Chart1LineSeries1.Active:=False;
+  chart1barseries1.Clear;
+  chart1barseries1.Active:=False;
+  graficaBoxPlotGeneral(round(length(dataNorm)), round(length(dataNorm[0])));
+end;
+
+
+//box plot
+procedure TForm1.MenuItem9Click(Sender: TObject);
+begin
+     ComboBox4.Clear;
+     ComboBox4.visible:= True;
+
+     ComboBox1.Visible:= False;
+     ComboBox2.Visible:= False;
+     ComboBox3.Visible:= False;
+     Button1.Visible:=False;
+
+     MenuItem8.Checked:=False;
+     MenuItem9.Checked:=True;
+     MenuItem10.Checked:=False;
+     label4.Caption:='BoxPlot:';
+     Button2.Visible:=True;
+     Button3.Visible:=True;
+
+     Chart1BoxAndWhiskerSeries1.Clear;
+     Chart1BoxAndWhiskerSeries1.Active:=True;
+     Chart1LineSeries1.Clear;
+     Chart1LineSeries1.Active:=False;
+     chart1barseries1.Clear;
+     chart1barseries1.Active:=False;
+
+     listaBP();
+end;
+
 //Dispersión
 procedure TForm1.MenuItem8Click(Sender: TObject);
 begin
@@ -845,66 +1024,19 @@ begin
        chart1barseries1.Active:=False;
        Chart1BoxAndWhiskerSeries1.Clear;
        Chart1BoxAndWhiskerSeries1.Active:=False;
-       ComboBox4.visible:= false;  Button2.Visible:= False;
+       Chart1LineSeries1.Active:=True;
+       Chart1LineSeries1.Clear;
+
+       ComboBox2.Clear;
+       ComboBox3.clear;
+
+       ComboBox4.visible:= false;
+
+       Button2.Visible:= False;
+       Button3.Visible:=False;
 
        label4.Caption:='Dispersión:';
        listaXYparaDisp();
-
-
-end;
-
-//inicia dispersijn
-procedure TForm1.Button1Click(Sender: TObject);
-begin
-
-
-  if ComboBox2.ItemIndex = ComboBox3.ItemIndex then
-  begin
-       ShowMessage('Por favor, elige dos atributos distintos. (˶º⤙º˶)');
-       Exit;//no ejecuta lo de abajo
-  end;
-  graficaDisper(round(length(dataNorm)), combobox2.ItemIndex, combobox3.itemindex);
-
-
-
-end;
-//boton para inciar BOXPLOTSSS
-procedure TForm1.Button2Click(Sender: TObject);
-var
-   clases: integer;
-begin
-  clases:= round(dataNorm[0,length(dataNorm[0])-1]);
-  //showmessage(inttostr(round(length(dataNorm))));
-  Chart1BoxAndWhiskerSeries1.Clear;
-  graficaBoxPlot(round(length(dataNorm)), clases, combobox4.ItemIndex);
-end;
-
-
-//box plot
-procedure TForm1.MenuItem9Click(Sender: TObject);
-begin
-     ComboBox4.Clear;
-     ComboBox4.visible:= True;
-     //vamoa reusar el com1
-     ComboBox1.Visible:= False;
-     ComboBox2.Visible:= False;
-     ComboBox3.Visible:= False;
-     Button1.Visible:=False;
-
-     MenuItem8.Checked:=False;
-     MenuItem9.Checked:=True;
-     MenuItem10.Checked:=False;
-     label4.Caption:='BoxPlot:';
-     Button2.Visible:=True;
-
-     Chart1BoxAndWhiskerSeries1.Clear;
-     Chart1BoxAndWhiskerSeries1.Active:=True;
-     Chart1LineSeries1.Clear;
-     Chart1LineSeries1.Active:=False;
-     chart1barseries1.Clear;
-     chart1barseries1.Active:=False;
-
-     listaBP();
 end;
 
 //BARRAS
@@ -923,7 +1055,10 @@ begin
   ComboBox4.visible:= false;
   Button1.Visible:=False;
   Button2.Visible:= False;
+  Button3.Visible:=False;
 
+  chart1barseries1.Clear;
+  chart1barseries1.Active:=True;
   Chart1LineSeries1.Clear;
   Chart1LineSeries1.Active:=False;
   Chart1BoxAndWhiskerSeries1.Clear;
