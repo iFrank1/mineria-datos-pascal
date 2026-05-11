@@ -8,6 +8,7 @@ object Form1: TForm1
   ClientWidth = 908
   Menu = MainMenu1
   LCLVersion = '4.4.0.0'
+  OnClose = FormClose
   OnCreate = FormCreate
   object StringGrid1: TStringGrid
     Left = 16

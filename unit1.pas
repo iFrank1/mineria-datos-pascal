@@ -52,6 +52,7 @@ type
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure ComboBox3Change(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure Label5Click(Sender: TObject);
     procedure Label6Click(Sender: TObject);
@@ -113,8 +114,8 @@ var
 
 implementation
 
-{uses
-  Unit2;}
+uses
+  Unit3;
 
 {$R *.lfm}
 
@@ -907,6 +908,11 @@ end;
 procedure TForm1.ComboBox3Change(Sender: TObject);
 begin
 
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+     Form2.Show;
 end;
 
 

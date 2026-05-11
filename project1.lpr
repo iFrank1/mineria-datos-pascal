@@ -11,7 +11,7 @@ uses
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, runtimetypeinfocontrols, datetimectrls, tachartlazaruspkg, Unit1,
-  Unit2;
+  Unit2, Unit3;
 
 {$R *.res}
 
@@ -22,6 +22,7 @@ begin
   Application.MainFormOnTaskbar:=True;
   {$POP}
   Application.Initialize;
+  Application.CreateForm(TForm2, Form2);
   Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.
