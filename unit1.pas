@@ -187,15 +187,16 @@ begin
 
   for j:=0 to cols-1 do begin
     sum:= 0;
-
-    for i:=0 to fils-1 do begin
-      //cuando el encabezado indique que no es numerico simplemente saltamos esa
+    //cuando el encabezado indique que no es numerico simplemente saltamos esa
       //columna, no le calculamos la media (se tendran 0s)
-      if dataSet[0,j] <> 0 then begin
+      if dataNorm[0,j] <> 0 then begin
         continue;
       end;
+
+    for i:=0 to fils-1 do begin
+
       //se reinician por columna a 0, cada uno tiene media y desv aparte
-      sum:= sum + dataSet[i+1,j];
+      sum:= sum + dataNorm[i+1,j];
     end;
     //luego de recorrer una columna y tener la sumatoria, obtengo la media
     stringgrid2.Cells[j,0]:= FloatToStr(sum/Real(fils));
@@ -207,7 +208,7 @@ end;
 procedure TForm1.calDesvXCol(fils, cols: integer);
 var
   i,j: integer;
-  sumC: real;
+  sumC, mediaCol: real;
 
 begin
   //ajustar al stringgrid para que concuerde a todas las columnas
@@ -215,19 +216,22 @@ begin
 
   for j:=0 to cols-1 do begin
     sumC:= 0;
-    for i:=0 to fils-1 do begin
-      //cuando el encabezado indique que no es numerico simplemente saltamos esa
+    //cuando el encabezado indique que no es numerico simplemente saltamos esa
       //columna, no le calculamos la media (se tendran 0s)
-      if dataSet[0,j] <> 0 then begin
-        continue;
-      end;
+    if dataNorm[0,j] <> 0 then begin
+      continue;
+    end;
+    mediaCol := StrToFloat(StringGrid2.Cells[j, 0]);
+    for i:=0 to fils-1 do begin
+
       //se reinician por columna a 0, cada uno tiene media y desv aparte
-      sumC:= sumC + power((dataSet[i+1,j] - strToFloat(stringgrid2.Cells[j,0])), 2);
+      sumC:= sumC + power((dataNorm[i+1,j] - mediaCol), 2);
     end;
     //luego de recorrer una columna y tener la sumatoria, obtengo la desvEst
     stringgrid2.Cells[j,1]:= FloatToStr(sqrt(sumC/Real(fils)));
   end;
 end;
+
 
 //Sin normalizar
 procedure TForm1.sinNorm(fils, cols: integer);
@@ -253,26 +257,47 @@ end;
 
 
 //normalizacion Z-Score
+
+//EL DIABLO, PARECE QUE ZSCORE ME QUIERE OBLIGAR A RECALCULAR SUS MEDIAS Y
+//DESVIACIONES SIN REUTILIZAR FUNCIONESS WTF
 procedure TForm1.normZscore(fils, cols: integer);
 var
   i,j: integer;
-  norm: real;
+  norm, sum, sumC, mediaCol, desvCol: real;
 begin
 
 
   for j:=0 to cols-1 do begin
-    for i:=0 to fils-1 do begin
+  //seguimos saltando no numericos
+    if dataSet[0,j] <> 0 then begin
+      continue;
+    end;
+    sum:=0;
 
-      //seguimos saltando no numericos
-      if dataSet[0,j] <> 0 then begin
-        continue;
-      end;
+    for i:=0 to fils-1 do begin
+      sum:= sum+ dataSet[i+1,j];
+    end;
+    mediaCol:=sum/Real(fils);
+
+    sumC:=0;
+    for i:=0 to fils-1 do begin
+        sumC:=sumC+Power(dataSet[i+1,j]-mediaCol, 2);
+    end;
+    desvCol:=sqrt(sumC/Real(fils));
+
+
+    for i:=0 to fils-1 do begin
       //z score
-      norm := (dataSet[i+1,j] - StrToFloat(StringGrid2.Cells[j,0])) / StrToFloat(StringGrid2.Cells[j,1]);
+      norm := (dataSet[i+1,j] - mediaCol)/desvCol;
       stringgrid1.Cells[j,i]:= FloatToStr(norm);
       dataNorm[i+1,j]:= norm;
+
     end;
-  end;
+    {
+    StringGrid2.Cells[j, 0] := '0.0000';
+    StringGrid2.Cells[j, 1] := '1.0000';
+    }
+    end;
 end;
 
 //normalizacion min max y sus funciones necesarias para lograrlo
@@ -283,10 +308,9 @@ var
 
 begin
      b:=0;
+
        for i:=0 to fils-1 do begin
-           if dataSet[0,j] <> 0 then begin
-              continue;
-           end;
+
            if (b = 0) then begin
               min:= dataSet[i+1,j];
               b:= 1;
@@ -306,10 +330,9 @@ var
 
 begin
      b:= 0;
+
        for i:=0 to fils-1 do begin
-           if dataSet[0,j] <> 0 then begin
-              continue;
-           end;
+
            if (b = 0) then begin
               max:= dataSet[i+1,j];
               b:= 1;
@@ -346,14 +369,16 @@ begin
      newMin:= StrToFloat(nuevoMin());
 
      for j:=0 to cols-1 do begin
+
+         //saltar no numericos
+         if dataSet[0,j] <> 0 then begin
+            continue;
+         end;
          maxA:= maximoColumna(fils, j);
          minA:= minimoColumna(fils, j);
          for i:=0 to fils-1 do begin
 
-         //saltar no numericos
-             if dataSet[0,j] <> 0 then begin
-                continue;
-             end;
+
 
          //min max
                v:= dataSet[i+1,j];
@@ -378,9 +403,7 @@ begin
      b:= 0;
 
        for i:=0 to fils-1 do begin
-           if dataSet[0,j] <> 0 then begin
-              continue;
-           end;
+
            if (b = 0) then begin
               max:= abs(dataSet[i+1,j]);
               b:= 1;
@@ -419,16 +442,19 @@ var
 begin
      for k:=0 to cols-1 do begin
 
+
+       //saltar no numericos
+       if dataSet[0,k] <> 0 then begin
+         continue;
+       end;
+
        maxA:= obtValAbsMax(fils, k);
        //showMessage(floatToStr(obtenerJ(maxA)));
        j:= obtenerJ(maxA);
 
        for i:=0 to fils-1 do begin
 
-         //saltar no numericos
-         if dataSet[0,k] <> 0 then begin
-           continue;
-         end;
+
          //escalado decimal
          v:= dataSet[i+1,k];
          //showMessage(floattostr(v));
@@ -811,9 +837,23 @@ begin
   if OpenDialog1.Execute then
   begin
     StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
+
     cargarDatos(stringgrid1.RowCount, stringgrid1.ColCount);
     calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
     calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
+
+    MenuItem11.Checked:=True;
+    MenuItem11.Enabled:=False;
+
+    MenuItem5.Checked:=False;
+    MenuItem5.Enabled:=True;
+
+    MenuItem6.Checked:=False;
+    MenuItem6.Enabled:=True;
+
+    MenuItem7.Checked:=False;
+    MenuItem7.Enabled:=True;
 
     //activamos otros botones luego de que ya hay info
     MenuItem3.Enabled:=True;
@@ -887,13 +927,25 @@ begin
 
 end;
 
+//Clicks para normalizar
 procedure TForm1.MenuItem5Click(Sender: TObject);
 begin
+
      normZscore(stringgrid1.RowCount, stringgrid1.ColCount);
+     calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+     calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
      MenuItem11.Checked:=False;
+     MenuItem11.Enabled:=True;
+
      MenuItem5.Checked:=True;
+     MenuItem5.Enabled:=False;
+
      MenuItem6.Checked:=False;
+     MenuItem6.Enabled:=True;
+
      MenuItem7.Checked:=False;
+     MenuItem7.Enabled:=True;
 
 
 end;
@@ -902,22 +954,63 @@ procedure TForm1.MenuItem6Click(Sender: TObject);
 begin
 
   minMax(stringgrid1.RowCount, stringgrid1.ColCount);
+  calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+  calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
   MenuItem11.Checked:=False;
+  MenuItem11.Enabled:=True;
+
   MenuItem5.Checked:=False;
+  MenuItem5.Enabled:=True;
+
   MenuItem6.Checked:=True;
+  MenuItem6.Enabled:=False;
+
   MenuItem7.Checked:=False;
+  MenuItem7.Enabled:=True;
 
 end;
 
 procedure TForm1.MenuItem7Click(Sender: TObject);
 begin
-  escDecimal(stringgrid1.RowCount, stringgrid1.ColCount);
-  MenuItem11.Checked:=False;
-  MenuItem5.Checked:=False;
-  MenuItem6.Checked:=False;
-  MenuItem7.Checked:=True;
 
+  escDecimal(stringgrid1.RowCount, stringgrid1.ColCount);
+  calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+  calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
+  MenuItem11.Checked:=False;
+  MenuItem11.Enabled:=True;
+
+  MenuItem5.Checked:=False;
+  MenuItem5.Enabled:=True;
+
+  MenuItem6.Checked:=False;
+  MenuItem6.Enabled:=True;
+
+  MenuItem7.Checked:=True;
+  MenuItem7.Enabled:=False;
 end;
+
+
+procedure TForm1.MenuItem11Click(Sender: TObject);
+begin
+  sinNorm(stringgrid1.RowCount, stringgrid1.ColCount);
+  calMedXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+  calDesvXCol(stringgrid1.RowCount, stringgrid1.ColCount);
+
+  MenuItem11.Checked:=True;
+  MenuItem11.Enabled:=False;
+
+  MenuItem5.Checked:=False;
+  MenuItem5.Enabled:=True;
+
+  MenuItem6.Checked:=False;
+  MenuItem6.Enabled:=True;
+
+  MenuItem7.Checked:=False;
+  MenuItem7.Enabled:=True;
+end;
+
 
 
 //inicia dispersijn
@@ -1087,15 +1180,6 @@ begin
       //combobox1.items.add('Col j: ' + inttostr(ubCols[k-1]));
   end;
 
-end;
-//quitar normalizacion
-procedure TForm1.MenuItem11Click(Sender: TObject);
-begin
-  sinNorm(stringgrid1.RowCount, stringgrid1.ColCount);
-  MenuItem11.Checked:=True;
-  MenuItem5.Checked:=False;
-  MenuItem6.Checked:=False;
-  MenuItem7.Checked:=False;
 end;
 
 //Guardar archivo del string grid
