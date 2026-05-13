@@ -223,18 +223,64 @@ a.}
 a salir de las columnas así que usaremos matrizMedias y matrizDesviacionesE}
 procedure TForm3.probabilidadesAtributoNum(columna: integer);
 var
-  i,j: integer;
-  : array of array real;
+  i,j, k: integer;
+  contadores: array of integer;
   {AGRUPA LOS VALORES FLOTANTES SEGÚN SU CLASE}
+
 begin
-  for i:=0 to length(lastColumn)-1 do begin
-      contadores[lastColumn[i]]:=
-  end;
+  {Sabemos que Matriz medias tiene el numero de atributos que se encontraron en
+  el documento cargado; Además, tiene el número de clases.}
+  setlength(matrizMedias, length(headers), length(lastColumn));
+  setlength(matrizDesviacionesE, length(headers), length(lastColumn));
+
+  setlength(contadores, noClases);
+
   {
-    for i:=0 to length(lastColumn)-1 do begin
-      contadores[lastColumn[i]]:= contadores[lastColumn[i]]+1;
-    end;
+  Primero vamos a agrupar todos los datos que correspondan a dicha clase.
+  Las filas de matrizMedias representan cuál es el atributo que se está
+  procesando.
+  las columnas de matrizMedias representan las clases de dichos atributos.
   }
+
+
+  setLength(contadorFilas, noClases);
+
+  for i:=0 to noClases-1 do begin
+      contadores[i]:= 0;
+  end;
+
+  for i:=0 to length(lastColumn)-1 do begin
+    contadores[lastColumn[i]]:= dataSetLimpio[i,];
+  end;
+
+
+
+
+  for i:=0 to length(lastColumn)-1 do begin
+    contadorFilas[i]:= 0;
+  end;
+  for i:=0 to noClases-1 do begin
+    setlength(listaValores[i], noClases, length(dataSetLimpio));
+  end;
+
+  for i:=0 to length(lastColumn)-1 do begin
+    listaValores[lastColumn[i]][contadorFilas[i]]:= dataSetLimpio[i,columna];
+    INC(contadorFilas[i]);
+  end;
+
+  {
+  for i:=0 to length(lastColumn)-1 do begin
+    for j:=0 to noClases-1 do begin
+        WriteLn(listaValores[i][j]);
+    end;
+  end;
+  }
+  for i:=0 to length(lastColumn)-1 do begin
+    for j:=0 to noClases-1 do begin
+        WriteLn(listaValores[i][j]);
+    end;
+    writeLn();
+  end;
 
 end;
 
@@ -270,6 +316,7 @@ begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
       cargarDatosLimpios(stringgrid1.RowCount-1, stringgrid1.ColCount-1);
       calcularProbabilidadesApr();
+      probabilidadesAtributoNum(0);
   end;
 
 end;
