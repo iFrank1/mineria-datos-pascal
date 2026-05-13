@@ -12134,9 +12134,9 @@ object Form2: TForm2
       Shape = stCircle
     end
     object Shape27: TShape
-      Left = 544
+      Left = 560
       Height = 25
-      Top = 320
+      Top = 344
       Width = 25
       Brush.Color = 7289627
       Pen.Color = 8542726
@@ -12197,9 +12197,9 @@ object Form2: TForm2
       Shape = stCircle
     end
     object Shape9: TShape
-      Left = 448
+      Left = 440
       Height = 25
-      Top = 256
+      Top = 328
       Width = 25
       Brush.Color = 7289627
       Pen.Color = 8542726
@@ -12260,18 +12260,18 @@ object Form2: TForm2
       Shape = stCircle
     end
     object Shape12: TShape
-      Left = 288
+      Left = 248
       Height = 25
-      Top = 328
+      Top = 400
       Width = 25
       Brush.Color = 7289627
       Pen.Color = 8542726
       Shape = stCircle
     end
     object Shape3: TShape
-      Left = 272
+      Left = 288
       Height = 25
-      Top = 224
+      Top = 344
       Width = 25
       Brush.Color = 7289627
       Pen.Color = 8542726
@@ -12296,9 +12296,9 @@ object Form2: TForm2
       Shape = stCircle
     end
     object Shape18: TShape
-      Left = 208
+      Left = 152
       Height = 25
-      Top = 416
+      Top = 448
       Width = 25
       Brush.Color = 7289627
       Pen.Color = 8542726

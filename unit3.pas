@@ -71,7 +71,7 @@ var
 implementation
 
 uses
-  Unit1;
+  Unit1, Unit4;
 {$R *.lfm}
 
 { TForm2 }
@@ -91,7 +91,8 @@ end;
 
 procedure TForm2.Button2Click(Sender: TObject);
 begin
-
+  Self.Hide;
+  Form3.Show;
 end;
 
 
