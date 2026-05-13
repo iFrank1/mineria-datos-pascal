@@ -84,6 +84,7 @@ object Form3: TForm3
           Width = 211
           Caption = 'Cargar conjunto de entrenamiento T'
           TabOrder = 0
+          OnClick = Button1Click
         end
         object StringGrid1: TStringGrid
           Left = 8
@@ -237,5 +238,10 @@ object Form3: TForm3
         end
       end
     end
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = '*.txt|*.txt'
+    Left = 40
+    Top = 376
   end
 end

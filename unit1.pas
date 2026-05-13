@@ -59,6 +59,7 @@ type
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem12Click(Sender: TObject);
+    procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
 
@@ -1211,6 +1212,11 @@ begin
       closefile(F);
     end;
   end;
+end;
+
+procedure TForm1.MenuItem1Click(Sender: TObject);
+begin
+
 end;
 
 end.
