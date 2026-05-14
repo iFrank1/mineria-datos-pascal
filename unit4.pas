@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls,
-  Buttons, StdCtrls, Grids, Spin, ColorBox, TAGraph;
+  Buttons, StdCtrls, Grids, Spin, ColorBox, TAGraph, Math;
 
 type
 
@@ -48,6 +48,7 @@ type
     procedure calcularProbabilidadesApr();
     procedure probabilidadesAtributoNum(columna: integer);
     procedure probabilidadesAtributoNom(columna: integer);
+    procedure naiveBayesEntrenamientoT();
   public
 
   end;
@@ -67,10 +68,11 @@ var
   {============================================================================}
   {PROBABILIDADES}
   probaprXclase: array of real;
-  {VEROSIMILITUD}
+  {M[ETOODS PARA LA VEROSIMILITUD}
   matrizMedias: array of array of real;
   matrizDesviacionesE: array of array of real;
-
+  matrizFrecuencias: array of array of integer;
+  {NAIVE BAYES, ENTRENAMIENTO CON EL CONJUNTO T}
 
 implementation
 
@@ -212,6 +214,8 @@ begin
 
 
 end;
+
+
 {------------------------------------------------------------------------------}
 {Funciones para calcular P(Xk | Ci), que es la verosimilitud de los atributos
 son dos porque para valores numéricos requerimos de la media y desviación
@@ -224,70 +228,177 @@ a salir de las columnas así que usaremos matrizMedias y matrizDesviacionesE}
 procedure TForm3.probabilidadesAtributoNum(columna: integer);
 var
   i,j, k: integer;
+  s, s2: real;
   contadores: array of integer;
+  agrupacionValores: array of array of real;
   {AGRUPA LOS VALORES FLOTANTES SEGÚN SU CLASE}
 
 begin
+  contadores:= nil;
+  agrupacionValores:= nil;
   {Sabemos que Matriz medias tiene el numero de atributos que se encontraron en
   el documento cargado; Además, tiene el número de clases.}
   setlength(matrizMedias, length(headers), length(lastColumn));
   setlength(matrizDesviacionesE, length(headers), length(lastColumn));
-
   setlength(contadores, noClases);
+  setlength(agrupacionValores, noClases);
 
   {
-  Primero vamos a agrupar todos los datos que correspondan a dicha clase.
-  Las filas de matrizMedias representan cuál es el atributo que se está
-  procesando.
-  las columnas de matrizMedias representan las clases de dichos atributos.
+   Antes de empezar a sacar valores estadísticos tengo que agrupar que valores
+   tiene cada clase, entonces creo un arreglo que tenga noclases como filas
+   y cada fila debe ser un arreglo con un tamaño determinado por la cantidad de veces que
+   aparezca dicha clase, eso ya lo hice en la función de arriba pero como no la hice global
+   y aquí la estaré reutilizando pues mejor la vuelvo a calcular, es simple.
   }
-
-
-  setLength(contadorFilas, noClases);
 
   for i:=0 to noClases-1 do begin
       contadores[i]:= 0;
   end;
 
-  for i:=0 to length(lastColumn)-1 do begin
-    contadores[lastColumn[i]]:= dataSetLimpio[i,];
-  end;
-
-
-
 
   for i:=0 to length(lastColumn)-1 do begin
-    contadorFilas[i]:= 0;
+    contadores[lastColumn[i]]:= contadores[lastColumn[i]] + 1;
   end;
+
+  {Agrupamientos por clases qwq}
   for i:=0 to noClases-1 do begin
-    setlength(listaValores[i], noClases, length(dataSetLimpio));
+    setlength(agrupacionValores[i], contadores[i]);
+    contadores[i]:=0;
   end;
 
   for i:=0 to length(lastColumn)-1 do begin
-    listaValores[lastColumn[i]][contadorFilas[i]]:= dataSetLimpio[i,columna];
-    INC(contadorFilas[i]);
+      agrupacionValores[lastColumn[i], contadores[lastColumn[i]]]:=dataSetLimpio[i,columna];
+      Inc(contadores[lastColumn[i]]);
   end;
+
+  {sacando media y callando bocas}
+  for i:=0 to noClases-1 do begin
+    s:=0;
+    for j:=0 to contadores[i]-1 do begin
+        s:= s+ agrupacionValores[i,j];
+    end;
+    matrizMedias[columna, i]:= s / contadores[i];
+  end;
+
+  {Ya hay medias, empiezo desviaciones.}
+
+  for i:=0 to noClases-1 do begin
+    s2:=0;
+    for j:=0 to contadores[i]-1 do begin
+        s2:= s2+ power((agrupacionValores[i,j] - matrizMedias[columna,i]), 2);
+    end;
+    matrizDesviacionesE[columna, i]:= sqrt(s2 / contadores[i]);
+  end;
+
+
+
+
 
   {
-  for i:=0 to length(lastColumn)-1 do begin
-    for j:=0 to noClases-1 do begin
-        WriteLn(listaValores[i][j]);
-    end;
-  end;
-  }
-  for i:=0 to length(lastColumn)-1 do begin
-    for j:=0 to noClases-1 do begin
-        WriteLn(listaValores[i][j]);
+  ----------------------------------DEBUG-------------------------------------
+  lastColumn[i] va de 0 a noClases - 1;
+  contadores[i] va de 0 a noClases - 1
+  pero contadores[i] cuando i  > noClases
+  claramente no existe.
+
+
+  s:=0;
+  for i:=0 to noClases-1 do begin
+    for j:=0 to contadores[i]-1 do begin
+        WriteLn('Clase: ', i, agrupacionValores[i,j]);
+        s:=s+1;
     end;
     writeLn();
   end;
+  writeLn(s);
+
+
+  for i:=0 to noClases-1 do begin
+    s:=0;
+    for j:=0 to contadores[i]-1 do begin
+        s:= s+ agrupacionValores[i,j];
+    end;
+    matrizMedias[columna, i]:= s / contadores[i];
+    writeln(s, ' / ', contadores[i], ' = ', s / contadores[i]);
+  end;
+
+  k:=0;
+  for i:=0 to noClases-1 do begin
+    for j:=0 to contadores[i]-1 do begin
+        WriteLn('Clase: ', i, agrupacionValores[i,j]);
+        k:=k+1;
+    end;
+    writeLn();
+    writeLn(k);
+    k:=0;
+  end;
+
+
+
+    s:=0;
+    for i:=0 to noClases-1 do begin
+      writeln('atributo: ', columna, 'Clase ', i, 'Media: ', matrizMedias[columna, i], 'Desv. E: ', matrizDesviacionesE[columna,i]);
+    end;
+  }
+
 
 end;
 
+
+{
+ En este caso solo me interesa contar cuántas veces aparece cada valor nominal
+ en cada una de las clases. Cuántos 0s en la clase 2, cuántos 1s, cuántos 2s,...
+ entonces puedo hacer una matriz de clasesxnorespuestasnominales
+ asi puedo contar por cada clase
+}
 procedure TForm3.probabilidadesAtributoNom(columna: integer);
+var
+  i,j,s: integer;
+
+
 begin
 
+  setlength(matrizFrecuencias, noClases, headers[columna]);
+
+  for i:=0 to noClases-1 do begin
+    for j:=0 to headers[columna] do begin
+      matrizFrecuencias[i,j]:=0;
+    end;
+  end;
+
+  for i:=0 to length(lastColumn)-1 do begin
+    matrizFrecuencias[lastColumn[i], round(dataSetLimpio[i,columna])]:= matrizFrecuencias[lastColumn[i], round(dataSetLimpio[i,columna])] + 1;
+  end;
+
+{-----------------------------------DEBUG--------------------------------------
+  s:=0;
+  writeln('Atributo: ', columna ,' No. Respuestas: ', headers[columna]);
+  for i:=0 to noClases-1 do begin
+    for j:=0 to headers[columna]-1 do begin
+      writeln('Frecuencia de: ', j, ' en la clase: ', i , ' = ' ,matrizFrecuencias[i,j]);
+      s:=s+matrizFrecuencias[i,j];
+    end;
+    writeln();
+  end;
+  writeln(s);
+  CALAJo si quedso
+}
 end;
+
+procedure TForm3.naiveBayesEntrenamientoT();
+var
+  i,j: integer;
+begin
+  calcularProbabilidadesApr();
+  for i:=0 to noColumnas do begin
+    if headers[i] = 0 then begin
+       probabilidadesAtributoNum(i);
+    end
+    else
+        probabilidadesAtributoNom(i);
+  end;
+end;
+
 
 procedure TForm3.Label2Click(Sender: TObject);
 begin
@@ -315,8 +426,7 @@ begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
       cargarDatosLimpios(stringgrid1.RowCount-1, stringgrid1.ColCount-1);
-      calcularProbabilidadesApr();
-      probabilidadesAtributoNum(0);
+
   end;
 
 end;

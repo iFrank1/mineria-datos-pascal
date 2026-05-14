@@ -1,18 +1,17 @@
 object Form3: TForm3
   Left = 466
-  Height = 695
+  Height = 556
   Top = 250
-  Width = 1152
+  Width = 922
   Caption = 'Form3'
-  ClientHeight = 695
-  ClientWidth = 1152
-  DesignTimePPI = 120
+  ClientHeight = 556
+  ClientWidth = 922
   LCLVersion = '4.4.0.0'
   object PageControl1: TPageControl
     Left = 0
-    Height = 695
+    Height = 556
     Top = 0
-    Width = 1152
+    Width = 922
     ActivePage = TabSheet1
     Align = alClient
     TabIndex = 0
@@ -20,25 +19,25 @@ object Form3: TForm3
     OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
-      ClientHeight = 662
-      ClientWidth = 1144
+      ClientHeight = 528
+      ClientWidth = 914
       object Panel2: TPanel
-        Left = 572
-        Height = 662
+        Left = 456
+        Height = 528
         Top = 0
-        Width = 572
+        Width = 458
         Align = alRight
-        ClientHeight = 662
-        ClientWidth = 572
+        ClientHeight = 528
+        ClientWidth = 458
         TabOrder = 0
         object StringGrid2: TStringGrid
-          Left = 30
-          Height = 270
-          Top = 50
-          Width = 230
+          Left = 24
+          Height = 216
+          Top = 40
+          Width = 184
           ColCount = 4
-          DefaultColWidth = 55
-          DefaultRowHeight = 38
+          DefaultColWidth = 44
+          DefaultRowHeight = 30
           FixedCols = 0
           FixedRows = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect, goSmoothScroll]
@@ -46,10 +45,10 @@ object Form3: TForm3
           TabOrder = 0
         end
         object Chart1: TChart
-          Left = 30
-          Height = 300
-          Top = 340
-          Width = 510
+          Left = 24
+          Height = 240
+          Top = 272
+          Width = 408
           AxisList = <          
             item
               Marks.LabelBrush.Style = bsClear
@@ -70,19 +69,19 @@ object Form3: TForm3
       end
       object Panel1: TPanel
         Left = 0
-        Height = 662
+        Height = 528
         Top = 0
-        Width = 560
+        Width = 448
         Align = alLeft
-        ClientHeight = 662
-        ClientWidth = 560
+        ClientHeight = 528
+        ClientWidth = 448
         TabOrder = 1
         object Button1: TButton
           Cursor = crHandPoint
-          Left = 10
-          Height = 31
-          Top = 10
-          Width = 264
+          Left = 8
+          Height = 25
+          Top = 8
+          Width = 211
           Caption = 'Cargar conjunto de entrenamiento T'
           TabOrder = 0
           OnClick = Button1Click
@@ -94,8 +93,8 @@ object Form3: TForm3
           Width = 416
           Align = alCustom
           ColCount = 10
-          DefaultColWidth = 55
-          DefaultRowHeight = 38
+          DefaultColWidth = 44
+          DefaultRowHeight = 30
           FixedCols = 0
           FixedRows = 0
           RowCount = 7
@@ -103,43 +102,43 @@ object Form3: TForm3
         end
         object Button2: TButton
           Cursor = crHandPoint
-          Left = 11
-          Height = 31
-          Top = 339
-          Width = 259
+          Left = 9
+          Height = 25
+          Top = 271
+          Width = 207
           Caption = 'Cargar conjunto de prueba P'
           TabOrder = 2
         end
         object SpinEdit1: TSpinEdit
-          Left = 90
-          Height = 28
-          Top = 390
-          Width = 62
+          Left = 72
+          Height = 23
+          Top = 312
+          Width = 50
           MaxValue = 5
           MinValue = 1
           TabOrder = 3
           Value = 1
         end
         object Label1: TLabel
-          Left = 11
-          Height = 20
-          Top = 400
-          Width = 69
+          Left = 9
+          Height = 15
+          Top = 320
+          Width = 54
           Caption = 'Valor de k:'
         end
         object Button3: TButton
-          Left = 176
-          Height = 31
-          Top = 388
-          Width = 34
+          Left = 141
+          Height = 25
+          Top = 310
+          Width = 27
           Caption = '✔'
           TabOrder = 4
         end
         object Label2: TLabel
-          Left = 350
-          Height = 20
-          Top = 400
-          Width = 64
+          Left = 280
+          Height = 15
+          Top = 320
+          Width = 52
           Caption = 'Exactitud:'
           OnClick = Label2Click
         end
@@ -147,40 +146,40 @@ object Form3: TForm3
     end
     object TabSheet2: TTabSheet
       Caption = 'TabSheet2'
-      ClientHeight = 662
-      ClientWidth = 1144
+      ClientHeight = 528
+      ClientWidth = 914
       object Panel3: TPanel
         Left = 0
-        Height = 662
+        Height = 528
         Top = 0
-        Width = 340
+        Width = 272
         Align = alLeft
-        ClientHeight = 662
-        ClientWidth = 340
+        ClientHeight = 528
+        ClientWidth = 272
         TabOrder = 0
         object SpinEdit2: TSpinEdit
-          Left = 210
-          Height = 28
-          Top = 10
-          Width = 62
+          Left = 168
+          Height = 23
+          Top = 8
+          Width = 50
           MinValue = 1
           TabOrder = 0
         end
         object Button5: TButton
           Cursor = crHandPoint
-          Left = 10
-          Height = 31
-          Top = 300
-          Width = 310
+          Left = 8
+          Height = 25
+          Top = 240
+          Width = 248
           Caption = 'Guardar datos sintéticos'
           TabOrder = 1
           OnClick = Button5Click
         end
         object RadioGroup1: TRadioGroup
-          Left = 10
-          Height = 181
-          Top = 60
-          Width = 311
+          Left = 8
+          Height = 145
+          Top = 48
+          Width = 249
           AutoFill = True
           Caption = 'Pintar clase'
           ChildSizing.LeftRightSpacing = 6
@@ -193,47 +192,47 @@ object Form3: TForm3
           TabOrder = 2
         end
         object Label3: TLabel
-          Left = 10
-          Height = 20
-          Top = 20
-          Width = 192
+          Left = 8
+          Height = 15
+          Top = 16
+          Width = 153
           Caption = 'Indique el número de clases: '
           OnClick = Label3Click
         end
         object Button4: TButton
           Cursor = crHandPoint
-          Left = 290
-          Height = 30
-          Top = 10
-          Width = 31
+          Left = 232
+          Height = 24
+          Top = 8
+          Width = 25
           Caption = '✔'
           TabOrder = 3
           OnClick = Button4Click
         end
         object Button6: TButton
-          Left = 10
-          Height = 31
-          Top = 250
-          Width = 180
+          Left = 8
+          Height = 25
+          Top = 200
+          Width = 144
           Caption = 'Cambiar color de clase'
           TabOrder = 4
         end
       end
       object Panel4: TPanel
-        Left = 362
-        Height = 662
+        Left = 288
+        Height = 528
         Top = 0
-        Width = 782
+        Width = 626
         Align = alRight
-        ClientHeight = 662
-        ClientWidth = 782
+        ClientHeight = 528
+        ClientWidth = 626
         TabOrder = 1
         object Image1: TImage
           Cursor = crHandPoint
-          Left = 20
-          Height = 522
-          Top = 10
-          Width = 720
+          Left = 16
+          Height = 418
+          Top = 8
+          Width = 576
           ParentShowHint = False
           ShowHint = True
         end
@@ -242,7 +241,7 @@ object Form3: TForm3
   end
   object OpenDialog1: TOpenDialog
     Filter = '*.txt|*.txt'
-    Left = 50
-    Top = 470
+    Left = 40
+    Top = 376
   end
 end
