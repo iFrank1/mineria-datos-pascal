@@ -49,6 +49,12 @@ type
     procedure probabilidadesAtributoNum(columna: integer);
     procedure probabilidadesAtributoNom(columna: integer);
     procedure naiveBayesEntrenamientoT();
+
+    function calcularDensidad(x, media, desvE: real): real;
+    function probNominal(col, clase: integer): real;
+    {para esta usamos extrañamente un array of string porque no sé que vaya a
+    caer, si integer o real, mejro convertirlos}
+    function predictDecF(x: array of string): integer;
   public
 
   end;
@@ -71,7 +77,8 @@ var
   {M[ETOODS PARA LA VEROSIMILITUD}
   matrizMedias: array of array of real;
   matrizDesviacionesE: array of array of real;
-  matrizFrecuencias: array of array of integer;
+  {matrizFrecuencias: array of array of integer;}
+  matrizFrecuenciasG: array of array of array of integer;
   {NAIVE BAYES, ENTRENAMIENTO CON EL CONJUNTO T}
 
 implementation
@@ -238,8 +245,7 @@ begin
   agrupacionValores:= nil;
   {Sabemos que Matriz medias tiene el numero de atributos que se encontraron en
   el documento cargado; Además, tiene el número de clases.}
-  setlength(matrizMedias, length(headers), length(lastColumn));
-  setlength(matrizDesviacionesE, length(headers), length(lastColumn));
+
   setlength(contadores, noClases);
   setlength(agrupacionValores, noClases);
 
@@ -271,7 +277,7 @@ begin
       Inc(contadores[lastColumn[i]]);
   end;
 
-  {sacando media y callando bocas}
+  {sacando medias y callando bocas}
   for i:=0 to noClases-1 do begin
     s:=0;
     for j:=0 to contadores[i]-1 do begin
@@ -335,10 +341,10 @@ begin
 
 
 
-    s:=0;
-    for i:=0 to noClases-1 do begin
-      writeln('atributo: ', columna, 'Clase ', i, 'Media: ', matrizMedias[columna, i], 'Desv. E: ', matrizDesviacionesE[columna,i]);
-    end;
+  s:=0;
+  for i:=0 to noClases-1 do begin
+      writeln('Columna: ', columna, 'Clase ', i, 'Media: ', matrizMedias[columna, i], 'Desv. E: ', matrizDesviacionesE[columna,i]);
+  end;
   }
 
 
@@ -358,16 +364,18 @@ var
 
 begin
 
-  setlength(matrizFrecuencias, noClases, headers[columna]);
+  {setlength(matrizFrecuencias, noClases, headers[columna]);}
+  setlength(matrizFrecuenciasG[columna], noClases, headers[columna]);
+
 
   for i:=0 to noClases-1 do begin
     for j:=0 to headers[columna] do begin
-      matrizFrecuencias[i,j]:=0;
+      matrizFrecuenciasG[columna,i,j]:=0;
     end;
   end;
 
   for i:=0 to length(lastColumn)-1 do begin
-    matrizFrecuencias[lastColumn[i], round(dataSetLimpio[i,columna])]:= matrizFrecuencias[lastColumn[i], round(dataSetLimpio[i,columna])] + 1;
+    matrizFrecuenciasG[columna, lastColumn[i], round(dataSetLimpio[i,columna])]:= matrizFrecuenciasG[columna, lastColumn[i], round(dataSetLimpio[i,columna])] + 1;
   end;
 
 {-----------------------------------DEBUG--------------------------------------
@@ -382,15 +390,29 @@ begin
   end;
   writeln(s);
   CALAJo si quedso
+
+  Intento de agregar la dimension de las columnas
+  s:=0;
+  writeln('Columna: ', columna, 'Atributo: ', headers[columna] ,' No. Respuestas: ', headers[columna]);
+  for i:=0 to noClases-1 do begin
+    for j:=0 to headers[columna]-1 do begin
+      writeln('Frecuencia de: ', j, ' en la clase: ', i , ' = ' ,matrizFrecuenciasG[columna,i,j]);
+      s:=s+matrizFrecuenciasG[columna, i,j];
+    end;
+    writeln();
+  end;
+  writeln(s);
 }
+
+
 end;
 
 procedure TForm3.naiveBayesEntrenamientoT();
 var
-  i,j: integer;
+  i: integer;
 begin
   calcularProbabilidadesApr();
-  for i:=0 to noColumnas do begin
+  for i:=0 to length(dataSetLimpio[0])-1 do begin
     if headers[i] = 0 then begin
        probabilidadesAtributoNum(i);
     end
@@ -398,6 +420,54 @@ begin
         probabilidadesAtributoNom(i);
   end;
 end;
+
+{Ahora si a programar las funciones para cálculo de probabilidades para nuevos
+ejemplos. Que claro, vienen del conjunto P.
+La más sencilla primero o quizá se me complique por accesos al arreglo qwq
+
+}
+function TForm3.probNominal(x, col, clase: integer): real;
+var
+  i,s: integer;
+begin
+  for i:=0 to header[col] do begin
+    s:= s + matrizFrecuenciasG[col, clase, x]];
+  end;
+
+  probNominal:= (matrizFrecuenciasG[col, x, header[col]] / s);
+end;
+
+function TForm3.calcularDensidad(x, media, desvE: real): real;
+var
+  px: real;
+begin
+
+  px:= (1 / desvE * sqrt(2*Pi)) * exp(-(power(x - media, 2)/(2 * power(desvE, 2))));
+  calcularDensidad:= px;
+end;
+
+function predictDecF(x: array of string): integer;
+var
+  num, pval: real;
+  nom: integer;
+  contador, i, j: integer;
+begin
+  for i:=0 to noClases-1 do begin
+    for j:=0 to length(headers)-1 do begin
+      if headers[i] = 0 then begin
+         num:= strtofloat(x[i]);
+         pnum:= calcularDensidad(num, matrizMedias[j, i],matrizDesviacionesE[j,i]);
+      end
+      else
+          nom:= strtoint(x[i]);
+          pnum:= probNominal(j, i);
+    end;
+  end;
+end;
+
+
+
+
 
 
 procedure TForm3.Label2Click(Sender: TObject);
@@ -425,8 +495,12 @@ procedure TForm3.Button1Click(Sender: TObject);
 begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
+      {Inicialización de tamaños para las distintas matrices.}
       cargarDatosLimpios(stringgrid1.RowCount-1, stringgrid1.ColCount-1);
-
+      setlength(matrizMedias, length(headers), length(lastColumn));
+      setlength(matrizDesviacionesE, length(headers), length(lastColumn));
+      setlength(matrizFrecuenciasG, length(dataSetLimpio[0]));
+      naiveBayesEntrenamientoT();
   end;
 
 end;
