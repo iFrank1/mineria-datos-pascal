@@ -1192,7 +1192,8 @@ end;
 //Guardar archivo del string grid
 procedure TForm1.MenuItem12Click(Sender: TObject);
 var
-   i: integer;
+   i,j: integer;
+   linea: string;
 begin
   if savedialog1.Execute then begin
     AssignFile(F,Savedialog1.FileName);
@@ -1204,13 +1205,21 @@ begin
     if IOResult=0 then
     begin
 
-      for i:= 0 to stringgrid1.RowCount-1 do begin
+      for i:=0 to length(dataNorm)-1 do
+        begin
+          linea:= '';
+          for j:=0 to length(dataNorm[0])-1 do
+          begin
+            linea:=linea +floattostr(dataNorm[i,j]);
 
-        Writeln(F,stringgrid1.Rows[i].CommaText);
+          if j < length(dataNorm[0])-1 then
+              linea := linea + ',';
+          end;
 
-      end;
-      closefile(F);
+          Writeln(F, linea);
+        end;
     end;
+    showMessage('Archivo guardado exitosamente.');
   end;
 end;
 

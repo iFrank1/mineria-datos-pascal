@@ -473,10 +473,11 @@ begin
          pnva:=0;
            if headers[j] <> 0 then begin
               pnva:= probNominal(j,i,strtoint(x[j]));
-
+              writeLN('Clase: ', i);
               write('Columna: ', j,' Categorias: ', headers[j]);
-              writeln(' Categoria: ', strtoint(x[j]), ' Probabilidad nueva: ', pnva);
-              writeln('PAC: ', pac);
+              writeln('Prob anterior: ', pac);
+              writeln('Categoria: ', strtoint(x[j]), ' Probabilidad nueva: ', pnva);
+
               if pnva <= 0 then begin
                 pnva := 1E-100;
               end;
@@ -488,25 +489,26 @@ begin
            else begin
                pnva:=calcularDensidad(strtofloat(x[j]), matrizMedias[j,i], matrizDesviacionesE[j,i]);
 
+               writeLN('Clase: ', i);
                write('Columna: ', j, ' x: ', strtofloat(x[j]));
                writeln('Media: ', matrizMedias[j,i], ' Desviacion E: ',matrizDesviacionesE[j,i]);
                writeln(' Probabilidad nueva: ', pnva);
-               writeln('PAC: ', pac);
+               writeln('Prob anterior: ', pac);
                {PARECE QUE PASCAL NO NOS DEJARÁ MULTIPLICAR A GUSTO LOS FLOTANTES qwq}
                if pnva <= 0 then
                begin
                     pnva := 1E-100;
                end;
-               //pac:= pac * pnva;
-               pac:= pac + ln(pnva);
+               pac:= pac * pnva;
+               //pac:= pac + ln(pnva);
                writeln('Probabilidad acumulada: ', pac);
            end;
 
        end;
-       pac:= pac + ln(probaprXclase[i]);
-       WriteLn();
+       pac:= pac * probaprXclase[i];
+       {WriteLn();
        WriteLn(' Apriori: ', probaprXclase[i], ' Probabilidad de pertenecer a la clase ', i, ' =', pac);
-       WriteLn();
+       WriteLn();}
        if i=0 then begin
           pMayor:=pac;
           perteneceA:=i;
@@ -517,7 +519,7 @@ begin
           perteneceA:=i;
        end;
   end;
-  WriteLn('Probabilidad final: ',  pMayor, ' Clase: ', perteneceA);
+  {WriteLn('Probabilidad final: ',  pMayor, ' Clase: ', perteneceA);}
   predictDecF:= perteneceA;
 end;
 
@@ -549,7 +551,8 @@ end;
 {--------------Conjunto de entrenamiento de Naive Bayes--------------}
 procedure TForm3.Button1Click(Sender: TObject);
 var
-  j: real;
+  j: integer;
+  entrada: array of string;
 begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
@@ -559,7 +562,9 @@ begin
       setlength(matrizDesviacionesE, length(headers), noClases);
       setlength(matrizFrecuenciasG, length(dataSetLimpio[0]));
       naiveBayesEntrenamientoT();
-      j:= predictDecF(['-2.946', '1.649', '0', '0', '-1.167', '0.788', '-0.909', '1.3', '-0.562', '0.902', '-0.07', '-0.842', '1', '0', '1']);
+      entrada:= ['-3.665', '0.337', '0', '0', '-0.641', '1.791', '-0.194', '1.686', '-0.359', '0.57', '-0.676', '-0.841', '2', '1', '0'];
+      j:= predictDecF(entrada);
+      writeln(j);
   end;
 
 end;
