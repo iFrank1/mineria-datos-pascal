@@ -1205,19 +1205,18 @@ begin
     if IOResult=0 then
     begin
 
-      for i:=0 to length(dataNorm)-1 do
-        begin
+      for i:=0 to length(dataNorm)-1 do begin
           linea:= '';
-          for j:=0 to length(dataNorm[0])-1 do
-          begin
+          for j:=0 to length(dataNorm[0])-1 do begin
             linea:=linea +floattostr(dataNorm[i,j]);
 
           if j < length(dataNorm[0])-1 then
               linea := linea + ',';
+
           end;
 
           Writeln(F, linea);
-        end;
+      end;
     end;
     showMessage('Archivo guardado exitosamente.');
   end;

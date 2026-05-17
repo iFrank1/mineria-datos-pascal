@@ -34,8 +34,8 @@ object Form3: TForm3
           Left = 24
           Height = 216
           Top = 40
-          Width = 184
-          ColCount = 4
+          Width = 400
+          ColCount = 10
           DefaultColWidth = 44
           DefaultRowHeight = 30
           FixedCols = 0
@@ -100,48 +100,81 @@ object Form3: TForm3
           RowCount = 7
           TabOrder = 1
         end
-        object Button2: TButton
-          Cursor = crHandPoint
-          Left = 9
-          Height = 25
-          Top = 271
-          Width = 207
-          Caption = 'Cargar conjunto de prueba P'
-          TabOrder = 2
-        end
         object SpinEdit1: TSpinEdit
-          Left = 72
+          Left = 76
           Height = 23
-          Top = 312
+          Top = 298
           Width = 50
           MaxValue = 5
           MinValue = 1
-          TabOrder = 3
+          TabOrder = 2
           Value = 1
+          OnChange = SpinEdit1Change
         end
         object Label1: TLabel
-          Left = 9
+          Left = 13
           Height = 15
-          Top = 320
+          Top = 306
           Width = 54
           Caption = 'Valor de k:'
         end
         object Button3: TButton
-          Left = 141
+          Left = 144
           Height = 25
-          Top = 310
-          Width = 27
-          Caption = '✔'
-          TabOrder = 4
+          Top = 296
+          Width = 63
+          Caption = 'Evaluar'
+          TabOrder = 3
+          OnClick = Button3Click
         end
         object Label2: TLabel
-          Left = 280
+          Left = 13
           Height = 15
-          Top = 320
-          Width = 52
-          Caption = 'Exactitud:'
+          Top = 336
+          Width = 66
+          Caption = 'Desempeño:'
           OnClick = Label2Click
         end
+        object Label4: TLabel
+          Left = 13
+          Height = 15
+          Top = 270
+          Width = 194
+          Caption = 'Ejecución de K-Fold-Cross Validation'
+        end
+        object Label5: TLabel
+          Left = 241
+          Height = 15
+          Top = 270
+          Width = 183
+          Caption = 'Evaluación mediante el conjunto P'
+        end
+        object Label6: TLabel
+          Left = 241
+          Height = 15
+          Top = 336
+          Width = 66
+          Caption = 'Desempeño:'
+          OnClick = Label2Click
+        end
+        object Button7: TButton
+          Left = 241
+          Height = 25
+          Top = 296
+          Width = 63
+          Caption = 'Evaluar'
+          TabOrder = 4
+        end
+      end
+      object Button2: TButton
+        Cursor = crHandPoint
+        Left = 456
+        Height = 25
+        Top = 8
+        Width = 207
+        Caption = 'Cargar conjunto de prueba P'
+        TabOrder = 2
+        OnClick = Button2Click
       end
     end
     object TabSheet2: TTabSheet
@@ -241,7 +274,7 @@ object Form3: TForm3
   end
   object OpenDialog1: TOpenDialog
     Filter = '*.txt|*.txt'
-    Left = 40
-    Top = 376
+    Left = 688
+    Top = 8
   end
 end

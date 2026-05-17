@@ -5,7 +5,7 @@ unit Unit4;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls,
+    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls,
   Buttons, StdCtrls, Grids, Spin, ColorBox, TAGraph, Math;
 
 type
@@ -19,11 +19,15 @@ type
     Button4: TButton;
     Button5: TButton;
     Button6: TButton;
+    Button7: TButton;
     Chart1: TChart;
     Image1: TImage;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
     OpenDialog1: TOpenDialog;
     PageControl1: TPageControl;
     Panel1: TPanel;
@@ -38,23 +42,32 @@ type
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Label2Click(Sender: TObject);
     procedure Label3Click(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
+    procedure SpinEdit1Change(Sender: TObject);
   private
     procedure cargarDatosLimpios(fils, cols: integer);
     procedure calcularProbabilidadesApr();
     procedure probabilidadesAtributoNum(columna: integer);
     procedure probabilidadesAtributoNom(columna: integer);
     procedure naiveBayesEntrenamientoT();
+    procedure testingPCT();
 
     function calcularDensidad(x, media, desvE: real): real;
     function probNominal(col, clase, x: integer): real;
     {para esta usamos extrañamente un array of string porque no sé que vaya a
     caer, si integer o real, mejro convertirlos}
     function predictDecF(x: array of string): integer;
+
+    procedure cargarDatosP(fils, cols: integer);
+
+    procedure kfoldc(nFolds: integer);
+    procedure newDSwithFolds(noFolds,leavOUT: integer; folks: array of TStringList);
   public
 
   end;
@@ -70,6 +83,7 @@ var
   headers: array of integer;
   noClases: integer;
   dataSetLimpio: array of array of real;
+  dataSetP: array of array of real;
   lastColumn: array of integer;
   contaFG: array of integer;
   {Al final parece que mejor si hago un arreglo global de contadores de las
@@ -83,7 +97,7 @@ var
   {matrizFrecuencias: array of array of integer;}
   matrizFrecuenciasG: array of array of array of integer;
   {NAIVE BAYES, ENTRENAMIENTO CON EL CONJUNTO T}
-
+  F:Textfile;
 implementation
 
 
@@ -473,27 +487,32 @@ begin
          pnva:=0;
            if headers[j] <> 0 then begin
               pnva:= probNominal(j,i,strtoint(x[j]));
+              {
               writeLN('Clase: ', i);
               write('Columna: ', j,' Categorias: ', headers[j]);
               writeln('Prob anterior: ', pac);
               writeln('Categoria: ', strtoint(x[j]), ' Probabilidad nueva: ', pnva);
+              }
 
               if pnva <= 0 then begin
                 pnva := 1E-100;
               end;
               pac:= pac * pnva;
               //pac:= pac + ln( pnva);
+              {
               writeln('Probabilidad acumulada: ', pac);
-
+              }
            end
            else begin
                pnva:=calcularDensidad(strtofloat(x[j]), matrizMedias[j,i], matrizDesviacionesE[j,i]);
 
+               {
                writeLN('Clase: ', i);
                write('Columna: ', j, ' x: ', strtofloat(x[j]));
                writeln('Media: ', matrizMedias[j,i], ' Desviacion E: ',matrizDesviacionesE[j,i]);
                writeln(' Probabilidad nueva: ', pnva);
                writeln('Prob anterior: ', pac);
+               }
                {PARECE QUE PASCAL NO NOS DEJARÁ MULTIPLICAR A GUSTO LOS FLOTANTES qwq}
                if pnva <= 0 then
                begin
@@ -501,7 +520,9 @@ begin
                end;
                pac:= pac * pnva;
                //pac:= pac + ln(pnva);
+               {
                writeln('Probabilidad acumulada: ', pac);
+               }
            end;
 
        end;
@@ -523,10 +544,205 @@ begin
   predictDecF:= perteneceA;
 end;
 
+procedure TForm3.testingPCT();
+var
+  i,j: integer;
+  entrada: array of string;
+  countPos: integer;
+  countNeg: integer;
+  r: string;
+
+  begin
+  entrada:=nil;
+  setlength(entrada, length(headers));
+
+  countPos:=0;
+  countNeg:=0;
+
+  for i:=0 to length(dataSetLimpio)-1 do begin
+
+      for j:=0 to length(dataSetLimpio[0])-1 do begin
+          entrada[j]:= stringgrid1.Cells[j,i];
+          //entrada[j]:= floattostr(dataSetLimpio[i,j]);
+      end;
+      write('Linea en evaluacion: ');
+      for j:=0 to length(dataSetLimpio[0])-1 do begin
+        write(entrada[j]);
+        write(' ');
+      end;
+      r:=stringgrid1.Cells[length(dataSetLimpio[0]),i];
+
+      writeln();
+      writeln('Clase real: ', r);
+      j:= predictDecF(entrada);
+      if j = strtoint(r) then
+         inc(COUNTPOS);
+      if j <> strtoint(r) then
+         inc(COUNTneg);
+      writeln('Prediccion: ',j);
+  end;
+ writeln('Incorrectos: ', countneg,' Error: ', FormatFloat('0.000000', COUNTneg/length(dataSetLimpio)));
+ writeln('Correctos: ', countpos,' Accuracy: ',FormatFloat('0.000000',(countPos/length(dataSetLimpio))*100));
 
 
+end;
+
+procedure TForm3.cargarDatosP(fils, cols: integer);
+var
+  i,j: integer;
+begin
+
+  SetLength(dataSetP, fils, cols);
+
+  for i:=0 to fils-1 do begin
+    for j:=0 to cols-1 do begin
+      dataSetP[i,j]:= StrToFloat(StringGrid2.Cells[j,i+1]);
+    end;
+  end;
+  stringgrid2.DeleteRow(0);
+
+  for i:=0 to fils-1 do begin
+    for j:=0 to cols-1 do begin
+      writeln(dataSetP[i,j]);
+    end;
+    writeln();
+  end;
+end;
 
 
+{K FOOOOLS}
+procedure TForm3.kfoldc(nFolds: integer);
+var
+  clasificacion:array of TStringList;
+  folks: array of TStringList;
+  i,j, ran, foldActual: integer;
+  linea, aux: string;
+begin
+  clasificacion:=nil;
+  folks:=nil;
+
+  setlength(clasificacion, noClases);
+  setlength(folks, nFolds);
+
+  for i:=0 to noClases-1 do begin
+    clasificacion[i]:= TStringList.Create;
+  end;
+
+  for i:=0 to length(lastColumn)-1 do begin
+    linea:='';
+    for j:=0 to length(dataSetLimpio[0])-1 do begin
+      linea:= linea +floattostr(dataSetP[i,j]);
+      if j < length(dataSetLimpio[0])-1 then
+        linea:=linea + ',';
+    end;
+    clasificacion[lastColumn[i]].Add(linea);
+  end;
+
+  randomize();
+  {para revolver los datos de forma aleatoria se hará desde la última
+  posición hasta la 0}
+  for i:=0 to noClases-1 do begin
+    if clasificacion[i].Count > 1 then begin
+       for j:=clasificacion[i].Count-1 downto 0 do begin
+           ran:= random(j+1);
+             ran:= Random(j+ 1);
+
+             aux:=clasificacion[i].Strings[j];
+             clasificacion[i].Strings[j]:= clasificacion[i].Strings[ran];
+             clasificacion[i].Strings[ran]:= aux;
+       end;
+    end;
+  end;
+
+
+  for i:=0 to nFolds-1 do begin
+    folks[i] := TStringList.Create;
+  end;
+
+  {
+  Al parecer al hacer los folds se quiere asegurar que cada fold tenga una parte
+  de cada clase y que justamente sea estratificado, como en cartas cawn
+  }
+
+  for i:= 0 to noClases-1 do begin
+    {Iniciamos a repartir los folds desde 0 o primer fold qwq\
+    se hara como en un circulo 0,...,9,0,...,}
+    foldActual:=0;
+    {Aqui es donde repartimos T entre los folds para que sea justo
+    cuando se acaben los de esta clase ya me paso a otra, como
+    si repartiera colores a la banda y todos deben tener 1 de cada uno xd
+    y pues me tengo que mover de persona}
+    for j:=0 to clasificacion[i].Count-1 do begin
+      folks[foldActual].Add(clasificacion[i].Strings[j]);
+
+      foldActual:=foldActual+ 1;
+      if foldActual > noClases-1 then
+        foldActual:= 0;
+      {pa evitar que mi foldactual ocasione un overflow reiniciamos contador}
+    end;
+
+  end;
+  {no more trash on ram viejo}
+  for i := 0 to noClases-1 do begin
+    clasificacion[i].Free;
+  end;
+
+end;
+
+procedure TForm3.newDSwithFolds(noFolds,leavOUT: integer; folks: array of TStringList);
+var
+  i,j, k, pos: integer;
+  line: TStringlist;
+begin
+  line:= nil;
+  line := TStringList.Create;
+  line.StrictDelimiter := True;
+  line.Delimiter := ',';
+  pos:=0;
+
+  for i:=0 to noFolds-1 do begin
+    if i = leavOUT then begin {ahora ignoramos aun foldjaja}
+       continue;
+    end;
+    for j:=0 to folks[i].count-1 do begin
+        line.DelimitedText:=folks[i].Strings[j];
+        pos:=0;
+        for k:=0 to length(dataSetLimpio[0])-1 do begin
+            dataSetLimpio[pos, k]:= strtofloat(line.Strings[k]);
+        end;
+    end;
+  end;
+  line.Free;
+end;
+
+procedure TForm3.pruebasAEntrenamientos(pruebaF: integer; folks: array of TStringList);
+var
+  i,j: integer;
+  entrada: array of string;
+  countPos: integer;
+  countNeg: integer;
+  linesfromF: integer;
+  r: string;
+  filaAct: array of string;
+begin
+  entrada:=nil;
+  setlength(entrada, length(headers));
+
+
+  countPos:=0;
+  countNeg:=0;
+  linesfromF:= TStringList.Create;
+  linesfromF.StrictDelimiter := True;
+  linesfromF.Delimiter := ',';
+
+  for i:=0 to folks[pruebaF].Count-1 do begin
+      linesfromF.DelimitedText := Folds[foldExamen].Strings[i];
+
+      for j:=0 to length(dataSetLimpio[0])-1 do begin
+        entrada[j]:= linesFromF.strings[j];
+      end;
+  end;
+end;
 
 procedure TForm3.Label2Click(Sender: TObject);
 begin
@@ -550,9 +766,6 @@ end;
 
 {--------------Conjunto de entrenamiento de Naive Bayes--------------}
 procedure TForm3.Button1Click(Sender: TObject);
-var
-  j: integer;
-  entrada: array of string;
 begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
@@ -562,14 +775,35 @@ begin
       setlength(matrizDesviacionesE, length(headers), noClases);
       setlength(matrizFrecuenciasG, length(dataSetLimpio[0]));
       naiveBayesEntrenamientoT();
-      entrada:= ['-3.665', '0.337', '0', '0', '-0.641', '1.791', '-0.194', '1.686', '-0.359', '0.57', '-0.676', '-0.841', '2', '1', '0'];
-      j:= predictDecF(entrada);
-      writeln(j);
+      //entrada:= ['-3.665', '0.337', '0', '0', '-0.641', '1.791', '-0.194', '1.686', '-0.359', '0.57', '-0.676', '-0.841', '2', '1', '0'];
+      //j:= predictDecF(entrada);
+      //writeln(j);
+      //testingPCT();
   end;
 
 end;
 
+procedure TForm3.Button2Click(Sender: TObject);
+begin
+  if OpenDialog1.Execute then begin
+      StringGrid2.LoadFromCSVFile(OpenDialog1.FileName);
+      cargarDatosP(stringgrid2.RowCount-1, stringgrid2.ColCount-1);
+  end;
+end;
+
+procedure TForm3.Button3Click(Sender: TObject);
+begin
+  if spinedit1.Value <> -1 then begin
+     kfoldc(spinedit1.value);
+  end;
+end;
+
 procedure TForm3.PageControl1Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm3.SpinEdit1Change(Sender: TObject);
 begin
 
 end;
