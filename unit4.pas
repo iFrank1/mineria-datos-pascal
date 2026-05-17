@@ -51,7 +51,7 @@ type
     procedure naiveBayesEntrenamientoT();
 
     function calcularDensidad(x, media, desvE: real): real;
-    function probNominal(col, clase: integer): real;
+    function probNominal(col, clase, x: integer): real;
     {para esta usamos extrañamente un array of string porque no sé que vaya a
     caer, si integer o real, mejro convertirlos}
     function predictDecF(x: array of string): integer;
@@ -71,6 +71,9 @@ var
   noClases: integer;
   dataSetLimpio: array of array of real;
   lastColumn: array of integer;
+  contaFG: array of integer;
+  {Al final parece que mejor si hago un arreglo global de contadores de las
+  clases pero ya no quiero cambiarle nada al codigo asi que gg/}
   {============================================================================}
   {PROBABILIDADES}
   probaprXclase: array of real;
@@ -107,6 +110,9 @@ begin
   SetLength(headers, cols);
   SetLength(lastColumn, fils);
 
+
+
+
   for i:=0 to fils-1 do begin
     for j:=0 to cols-1 do begin
       dataSetLimpio[i,j]:= StrToFloat(StringGrid1.Cells[j,i+1]);
@@ -121,6 +127,13 @@ begin
 
   for i:=1 to fils do begin
       lastColumn[i-1]:= StrToInt(StringGrid1.Cells[cols,i]);
+  end;
+  setlength(contaFG, noClases);
+  for i:=0 to noClases-1 do begin
+      contaFG[i]:= 0;
+  end;
+  for i:=0 to length(lastColumn)-1 do begin
+    contaFG[lastColumn[i]]:=contaFG[lastColumn[i]] + 1;
   end;
 
   stringgrid1.DeleteRow(0);
@@ -369,7 +382,7 @@ begin
 
 
   for i:=0 to noClases-1 do begin
-    for j:=0 to headers[columna] do begin
+    for j:=0 to headers[columna]-1 do begin
       matrizFrecuenciasG[columna,i,j]:=0;
     end;
   end;
@@ -405,6 +418,7 @@ begin
 }
 
 
+
 end;
 
 procedure TForm3.naiveBayesEntrenamientoT();
@@ -426,43 +440,85 @@ ejemplos. Que claro, vienen del conjunto P.
 La más sencilla primero o quizá se me complique por accesos al arreglo qwq
 
 }
-function TForm3.probNominal(x, col, clase: integer): real;
-var
-  i,s: integer;
-begin
-  for i:=0 to header[col] do begin
-    s:= s + matrizFrecuenciasG[col, clase, x]];
-  end;
 
-  probNominal:= (matrizFrecuenciasG[col, x, header[col]] / s);
+function TForm3.probNominal(col, clase,x: integer): real;
+begin
+  //writeln(matrizFrecuenciasG[col, clase, x], ' / ', contaFG[clase]);
+  probNominal:= (matrizFrecuenciasG[col, clase, x] / contaFG[clase]);
 end;
 
 function TForm3.calcularDensidad(x, media, desvE: real): real;
 var
   px: real;
 begin
-
-  px:= (1 / desvE * sqrt(2*Pi)) * exp(-(power(x - media, 2)/(2 * power(desvE, 2))));
+  {writeln(desvE * sqrt(2*Pi));
+  writeln(power(x - media, 2));
+  writeln(2 * power(desvE, 2));
+  writeln(exp(-(power(x - media, 2)/(2 * power(desvE, 2)))));}
+  px:= (1 / (desvE * sqrt(2*Pi))) * exp(-(power(x - media, 2)/(2 * power(desvE, 2))));
   calcularDensidad:= px;
 end;
 
-function predictDecF(x: array of string): integer;
+function TForm3.predictDecF(x: array of string): integer;
 var
-  num, pval: real;
-  nom: integer;
-  contador, i, j: integer;
+  pnva, pac, pMayor: real;
+  pertenecea: integer;
+  i, j: integer;
 begin
+  pMayor:=-1;
+  pertenecea:=-1;
   for i:=0 to noClases-1 do begin
-    for j:=0 to length(headers)-1 do begin
-      if headers[i] = 0 then begin
-         num:= strtofloat(x[i]);
-         pnum:= calcularDensidad(num, matrizMedias[j, i],matrizDesviacionesE[j,i]);
-      end
-      else
-          nom:= strtoint(x[i]);
-          pnum:= probNominal(j, i);
-    end;
+    pac:=1;
+       for j:=0 to length(headers)-1 do begin
+         pnva:=0;
+           if headers[j] <> 0 then begin
+              pnva:= probNominal(j,i,strtoint(x[j]));
+
+              write('Columna: ', j,' Categorias: ', headers[j]);
+              writeln(' Categoria: ', strtoint(x[j]), ' Probabilidad nueva: ', pnva);
+              writeln('PAC: ', pac);
+              if pnva <= 0 then begin
+                pnva := 1E-100;
+              end;
+              pac:= pac * pnva;
+              //pac:= pac + ln( pnva);
+              writeln('Probabilidad acumulada: ', pac);
+
+           end
+           else begin
+               pnva:=calcularDensidad(strtofloat(x[j]), matrizMedias[j,i], matrizDesviacionesE[j,i]);
+
+               write('Columna: ', j, ' x: ', strtofloat(x[j]));
+               writeln('Media: ', matrizMedias[j,i], ' Desviacion E: ',matrizDesviacionesE[j,i]);
+               writeln(' Probabilidad nueva: ', pnva);
+               writeln('PAC: ', pac);
+               {PARECE QUE PASCAL NO NOS DEJARÁ MULTIPLICAR A GUSTO LOS FLOTANTES qwq}
+               if pnva <= 0 then
+               begin
+                    pnva := 1E-100;
+               end;
+               //pac:= pac * pnva;
+               pac:= pac + ln(pnva);
+               writeln('Probabilidad acumulada: ', pac);
+           end;
+
+       end;
+       pac:= pac + ln(probaprXclase[i]);
+       WriteLn();
+       WriteLn(' Apriori: ', probaprXclase[i], ' Probabilidad de pertenecer a la clase ', i, ' =', pac);
+       WriteLn();
+       if i=0 then begin
+          pMayor:=pac;
+          perteneceA:=i;
+       end;
+
+       if pac > pMayor then begin
+          pMayor:=pac;
+          perteneceA:=i;
+       end;
   end;
+  WriteLn('Probabilidad final: ',  pMayor, ' Clase: ', perteneceA);
+  predictDecF:= perteneceA;
 end;
 
 
@@ -492,15 +548,18 @@ end;
 
 {--------------Conjunto de entrenamiento de Naive Bayes--------------}
 procedure TForm3.Button1Click(Sender: TObject);
+var
+  j: real;
 begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
       {Inicialización de tamaños para las distintas matrices.}
       cargarDatosLimpios(stringgrid1.RowCount-1, stringgrid1.ColCount-1);
-      setlength(matrizMedias, length(headers), length(lastColumn));
-      setlength(matrizDesviacionesE, length(headers), length(lastColumn));
+      setlength(matrizMedias, length(headers), noClases);
+      setlength(matrizDesviacionesE, length(headers), noClases);
       setlength(matrizFrecuenciasG, length(dataSetLimpio[0]));
       naiveBayesEntrenamientoT();
+      j:= predictDecF(['-2.946', '1.649', '0', '0', '-1.167', '0.788', '-0.909', '1.3', '-0.562', '0.902', '-0.07', '-0.842', '1', '0', '1']);
   end;
 
 end;
