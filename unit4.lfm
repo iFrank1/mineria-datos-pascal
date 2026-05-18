@@ -131,8 +131,8 @@ object Form3: TForm3
           Left = 13
           Height = 15
           Top = 336
-          Width = 66
-          Caption = 'Desempeño:'
+          Width = 51
+          Caption = 'Precisión:'
           OnClick = Label2Click
         end
         object Label4: TLabel
@@ -153,8 +153,8 @@ object Form3: TForm3
           Left = 241
           Height = 15
           Top = 336
-          Width = 66
-          Caption = 'Desempeño:'
+          Width = 51
+          Caption = 'Precisión:'
           OnClick = Label2Click
         end
         object Button7: TButton
@@ -164,6 +164,21 @@ object Form3: TForm3
           Width = 63
           Caption = 'Evaluar'
           TabOrder = 4
+          OnClick = Button7Click
+        end
+        object Label7: TLabel
+          Left = 13
+          Height = 15
+          Top = 368
+          Width = 31
+          Caption = 'Error: '
+        end
+        object Label8: TLabel
+          Left = 240
+          Height = 15
+          Top = 369
+          Width = 31
+          Caption = 'Error: '
         end
       end
       object Button2: TButton

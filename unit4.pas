@@ -28,6 +28,8 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
     OpenDialog1: TOpenDialog;
     PageControl1: TPageControl;
     Panel1: TPanel;
@@ -46,6 +48,7 @@ type
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
     procedure Label2Click(Sender: TObject);
     procedure Label3Click(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
@@ -56,7 +59,7 @@ type
     procedure probabilidadesAtributoNum(columna: integer);
     procedure probabilidadesAtributoNom(columna: integer);
     procedure naiveBayesEntrenamientoT();
-    procedure testingPCT();
+    procedure testingP();
 
     function calcularDensidad(x, media, desvE: real): real;
     function probNominal(col, clase, x: integer): real;
@@ -562,14 +565,15 @@ begin
   {WriteLn('Probabilidad final: ',  pMayor, ' Clase: ', perteneceA);}
   predictDecF:= perteneceA;
 end;
-
-procedure TForm3.testingPCT();
+{PROCEDIMIENTOS NECESARIOS PARA HACER LA EVALUACIÓN CON UN CONJUNTO P}
+procedure TForm3.testingP();
 var
   i,j: integer;
   entrada: array of string;
   countPos: integer;
   countNeg: integer;
   r: string;
+  precision: real;
 
   begin
   entrada:=nil;
@@ -578,21 +582,25 @@ var
   countPos:=0;
   countNeg:=0;
 
-  for i:=0 to length(dataSetLimpio)-1 do begin
+  for i:=0 to length(dataSetP)-1 do begin
 
-      for j:=0 to length(dataSetLimpio[0])-1 do begin
-          entrada[j]:= stringgrid1.Cells[j,i];
+      for j:=0 to length(dataSetP[0])-1 do begin
+          entrada[j]:= stringgrid2.Cells[j,i];
           //entrada[j]:= floattostr(dataSetLimpio[i,j]);
       end;
+      {
       write('Linea en evaluacion: ');
-      for j:=0 to length(dataSetLimpio[0])-1 do begin
+      for j:=0 to length(dataSetP[0])-1 do begin
         write(entrada[j]);
         write(' ');
       end;
-      r:=stringgrid1.Cells[length(dataSetLimpio[0]),i];
+
+      }
+      r:=stringgrid2.Cells[length(dataSetP[0]),i];
 
       writeln();
-      writeln('Clase real: ', r);
+      //writeln('Clase real: ', r);
+
       j:= predictDecF(entrada);
       if j = strtoint(r) then
          inc(COUNTPOS);
@@ -600,9 +608,16 @@ var
          inc(COUNTneg);
       writeln('Prediccion: ',j);
   end;
- writeln('Incorrectos: ', countneg,' Error: ', FormatFloat('0.000000', COUNTneg/length(dataSetLimpio)));
- writeln('Correctos: ', countpos,' Accuracy: ',FormatFloat('0.000000',(countPos/length(dataSetLimpio))*100));
+ //writeln('Incorrectos: ', countneg,' Error: ', FormatFloat('0.000000', COUNTneg/length(dataSetP)));
+ //writeln('Correctos: ', countpos,' Accuracy: ',FormatFloat('0.000000',(countPos/length(dataSetP))*100));
+ precision:= (countpos/length(dataSetP)*100);
 
+ Label6.Caption:='Precisión: ';
+ Label6.Caption:=Label6.Caption  + FormatFloat('0.00',precision) + '%';
+
+
+ Label8.Caption:='Error: ';
+ Label8.Caption:=Label8.Caption  + FormatFloat('0.00',(COUNTneg/length(dataSetP)));
 
 end;
 
@@ -835,6 +850,11 @@ end;
 procedure TForm3.Button5Click(Sender: TObject);
 begin
 
+end;
+{EVALUAR P}
+procedure TForm3.Button7Click(Sender: TObject);
+begin
+  testingP();
 end;
 
 procedure TForm3.Button4Click(Sender: TObject);
