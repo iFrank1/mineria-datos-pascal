@@ -101,11 +101,11 @@ object Form3: TForm3
           TabOrder = 1
         end
         object SpinEdit1: TSpinEdit
-          Left = 76
+          Left = 80
           Height = 23
-          Top = 298
+          Top = 296
           Width = 50
-          MaxValue = 5
+          MaxValue = 30
           MinValue = 1
           TabOrder = 2
           Value = 1

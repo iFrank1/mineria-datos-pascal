@@ -68,6 +68,9 @@ type
 
     procedure kfoldc(nFolds: integer);
     procedure newDSwithFolds(noFolds,leavOUT: integer; folks: array of TStringList);
+    function pruebasAEntrenamientos(pruebaF: integer; folks: array of TStringList): real;
+    procedure recovery(fils, cols: integer);
+
   public
 
   end;
@@ -83,6 +86,7 @@ var
   headers: array of integer;
   noClases: integer;
   dataSetLimpio: array of array of real;
+  backup: array of array of real;
   dataSetP: array of array of real;
   lastColumn: array of integer;
   contaFG: array of integer;
@@ -119,8 +123,9 @@ begin
 
   Pienso mostrar en el stringgrid los datos, sin la fila de tipo de atributo
   pero si la de clases.}
-
+  writeln(fils, ' ', cols);
   SetLength(dataSetLimpio, fils, cols);
+  SetLength(backup, fils, cols);
   SetLength(headers, cols);
   SetLength(lastColumn, fils);
 
@@ -130,6 +135,7 @@ begin
   for i:=0 to fils-1 do begin
     for j:=0 to cols-1 do begin
       dataSetLimpio[i,j]:= StrToFloat(StringGrid1.Cells[j,i+1]);
+      backup[i,j]:= dataSetLimpio[i,j];
     end;
   end;
 
@@ -193,6 +199,19 @@ begin
   }
 
 
+end;
+
+procedure TForm3.recovery(fils, cols: integer);
+var
+  i,j: integer;
+begin
+  writeln(fils, ' ', cols);
+  for i:=0 to fils-1 do begin
+    for j:=0 to cols-1 do begin
+      dataSetLimpio[i,j]:= backup[i,j];
+    end;
+  end;
+  naiveBayesEntrenamientoT();
 end;
 
 {------------------------------------------------------------------------------}
@@ -617,6 +636,7 @@ var
   folks: array of TStringList;
   i,j, ran, foldActual: integer;
   linea, aux: string;
+  precision, preRound: real;
 begin
   clasificacion:=nil;
   folks:=nil;
@@ -631,10 +651,11 @@ begin
   for i:=0 to length(lastColumn)-1 do begin
     linea:='';
     for j:=0 to length(dataSetLimpio[0])-1 do begin
-      linea:= linea +floattostr(dataSetP[i,j]);
-      if j < length(dataSetLimpio[0])-1 then
+      linea:= linea +floattostr(dataSetLimpio[i,j]);
+      if j < length(dataSetLimpio[0]) then
         linea:=linea + ',';
     end;
+    linea:=linea + floattostr(lastColumn[i]);
     clasificacion[lastColumn[i]].Add(linea);
   end;
 
@@ -644,9 +665,7 @@ begin
   for i:=0 to noClases-1 do begin
     if clasificacion[i].Count > 1 then begin
        for j:=clasificacion[i].Count-1 downto 0 do begin
-           ran:= random(j+1);
-             ran:= Random(j+ 1);
-
+             ran:= random(j+1);
              aux:=clasificacion[i].Strings[j];
              clasificacion[i].Strings[j]:= clasificacion[i].Strings[ran];
              clasificacion[i].Strings[ran]:= aux;
@@ -664,7 +683,7 @@ begin
   de cada clase y que justamente sea estratificado, como en cartas cawn
   }
 
-  for i:= 0 to noClases-1 do begin
+  for i:=0 to noClases-1 do begin
     {Iniciamos a repartir los folds desde 0 o primer fold qwq\
     se hara como en un circulo 0,...,9,0,...,}
     foldActual:=0;
@@ -672,11 +691,22 @@ begin
     cuando se acaben los de esta clase ya me paso a otra, como
     si repartiera colores a la banda y todos deben tener 1 de cada uno xd
     y pues me tengo que mover de persona}
+
+    {
+    RECORDAR: clasificacion[i].Count-1 me indica el rango de localidades de memoria
+    disponibles por cada una de las clasificaciones que se hicieron
+    porque count sin -1 es la cantidad real por clase.
+    }
+
     for j:=0 to clasificacion[i].Count-1 do begin
+      //writeln(clasificacion[i].Count-1);
+      //writeln(foldActual);
+      //writeln(clasificacion[i].Strings[j]);
       folks[foldActual].Add(clasificacion[i].Strings[j]);
 
       foldActual:=foldActual+ 1;
-      if foldActual > noClases-1 then
+
+      if foldActual > nFolds-1 then
         foldActual:= 0;
       {pa evitar que mi foldactual ocasione un overflow reiniciamos contador}
     end;
@@ -687,6 +717,23 @@ begin
     clasificacion[i].Free;
   end;
 
+  precision:= 0;
+
+  for foldActual:=0 to nFolds-1 do begin
+      newDSwithFolds(nFolds,foldActual, folks);
+      naiveBayesEntrenamientoT();
+
+      preround := pruebasAEntrenamientos(foldActual, folks);
+      precision := precision + preround;
+
+      {para ir viendo como cambian los valores de fold actual
+      y cuales van a ser los numeros que se van a sumar
+      WriteLn('Ronda ', foldActual + 1, ': ', preRound:0:6, '%');}
+  end;
+  precision:= precision/nFolds;
+  Label2.Caption:=' Desempeño: ';
+  Label2.Caption:=Label2.Caption  + FormatFloat('0.00',precision) + '%';
+
 end;
 
 procedure TForm3.newDSwithFolds(noFolds,leavOUT: integer; folks: array of TStringList);
@@ -694,6 +741,7 @@ var
   i,j, k, pos: integer;
   line: TStringlist;
 begin
+
   line:= nil;
   line := TStringList.Create;
   line.StrictDelimiter := True;
@@ -701,34 +749,52 @@ begin
   pos:=0;
 
   for i:=0 to noFolds-1 do begin
-    if i = leavOUT then begin {ahora ignoramos aun foldjaja}
+
+
+    if i = leavOUT then begin {ahora ignoramos a un foldjaja}
        continue;
     end;
+
     for j:=0 to folks[i].count-1 do begin
+        {
+        folks[i].count cuantas lineas per group
+        folks[i].Strings[j] cada una de las lineas per group
+        }
         line.DelimitedText:=folks[i].Strings[j];
         pos:=0;
+
         for k:=0 to length(dataSetLimpio[0])-1 do begin
+
             dataSetLimpio[pos, k]:= strtofloat(line.Strings[k]);
+            //writeln(dataSetLimpio[pos, k]);
+
         end;
+        inc(pos);
+        {
+        writeln('DEBUG NO ESTA PASANDO LA ULTIMA COL A DATASETLIMPIO C:');
+        }
+
+
+
     end;
   end;
   line.Free;
 end;
 
-procedure TForm3.pruebasAEntrenamientos(pruebaF: integer; folks: array of TStringList);
+function TForm3.pruebasAEntrenamientos(pruebaF: integer; folks: array of TStringList): real;
 var
   i,j: integer;
   entrada: array of string;
   countPos: integer;
   countNeg: integer;
-  linesfromF: integer;
+  clase: integer;
+  linesfromF:TStringList;
+  salida: integer;
   r: string;
-  filaAct: array of string;
+
 begin
   entrada:=nil;
   setlength(entrada, length(headers));
-
-
   countPos:=0;
   countNeg:=0;
   linesfromF:= TStringList.Create;
@@ -736,12 +802,24 @@ begin
   linesfromF.Delimiter := ',';
 
   for i:=0 to folks[pruebaF].Count-1 do begin
-      linesfromF.DelimitedText := Folds[foldExamen].Strings[i];
+      linesfromF.DelimitedText := folks[pruebaF].Strings[i];
 
       for j:=0 to length(dataSetLimpio[0])-1 do begin
         entrada[j]:= linesFromF.strings[j];
       end;
+
+      clase := strtoint(linesfromF.Strings[15]);
+      salida:= predictDecF(entrada);
+
+      if salida = clase then begin
+         countPos:= countPos+1;
+      end
+      else
+          countNeg:=countNeg+1;
   end;
+  linesFromF.Free;
+  pruebasAEntrenamientos:= (countPos / folks[pruebaF].Count) * 100;
+
 end;
 
 procedure TForm3.Label2Click(Sender: TObject);
@@ -793,9 +871,12 @@ end;
 
 procedure TForm3.Button3Click(Sender: TObject);
 begin
-  if spinedit1.Value <> -1 then begin
-     kfoldc(spinedit1.value);
-  end;
+
+   if spinedit1.Value <> -1 then begin
+      kfoldc(spinedit1.value);
+
+   end;
+
 end;
 
 procedure TForm3.PageControl1Change(Sender: TObject);
@@ -805,7 +886,7 @@ end;
 
 procedure TForm3.SpinEdit1Change(Sender: TObject);
 begin
-
+  recovery(stringgrid1.RowCount, stringgrid1.ColCount-1);
 end;
 
 end.
