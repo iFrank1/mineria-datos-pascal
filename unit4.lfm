@@ -129,6 +129,7 @@ object Form3: TForm3
           Top = 296
           Width = 63
           Caption = 'Evaluar'
+          Enabled = False
           TabOrder = 3
           OnClick = Button3Click
         end
@@ -168,15 +169,9 @@ object Form3: TForm3
           Top = 296
           Width = 63
           Caption = 'Evaluar'
+          Enabled = False
           TabOrder = 4
           OnClick = Button7Click
-        end
-        object Label7: TLabel
-          Left = 13
-          Height = 15
-          Top = 368
-          Width = 31
-          Caption = 'Error: '
         end
         object Label8: TLabel
           Left = 240

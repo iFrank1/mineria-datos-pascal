@@ -28,7 +28,6 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
-    Label7: TLabel;
     Label8: TLabel;
     OpenDialog1: TOpenDialog;
     PageControl1: TPageControl;
@@ -768,6 +767,7 @@ begin
   Label2.Caption:=' Desempeño: ';
   Label2.Caption:=Label2.Caption  + FormatFloat('0.00',precision) + '%';
 
+
 end;
 
 procedure TForm3.newDSwithFolds(noFolds,leavOUT: integer; folks: array of TStringList);
@@ -871,6 +871,11 @@ end;
 {EVALUAR P}
 procedure TForm3.Button7Click(Sender: TObject);
 begin
+  If not button3.Enabled then begin
+     showMessage('Carga el conjunto de entrenamiento T');
+     Exit;
+  end;
+  button7.Enabled:=True;
   testingP();
 end;
 
@@ -887,7 +892,7 @@ procedure TForm3.Button1Click(Sender: TObject);
 begin
   if OpenDialog1.Execute then begin
       StringGrid1.LoadFromCSVFile(OpenDialog1.FileName);
-      {Inicialización de tamaños para las distintas matrices.}
+
       cargarDatosLimpios(stringgrid1.RowCount-1, stringgrid1.ColCount-1);
       setlength(matrizMedias, length(headers), noClases);
       setlength(matrizDesviacionesE, length(headers), noClases);
@@ -897,6 +902,7 @@ begin
       //j:= predictDecF(entrada);
       //writeln(j);
       //testingPCT();
+      button3.Enabled:=True;
   end;
 
 end;
@@ -906,6 +912,7 @@ begin
   if OpenDialog1.Execute then begin
       StringGrid2.LoadFromCSVFile(OpenDialog1.FileName);
       cargarDatosP(stringgrid2.RowCount-1, stringgrid2.ColCount-1);
+      button7.Enabled:=True;
   end;
 end;
 
