@@ -6,7 +6,7 @@ interface
 
 uses
     Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls,
-  Buttons, StdCtrls, Grids, Spin, ColorBox, TAGraph, Math;
+  Buttons, StdCtrls, Grids, Spin, ColorBox, Menus, TAGraph, TASeries, Math;
 
 type
 
@@ -18,9 +18,9 @@ type
     Button3: TButton;
     Button4: TButton;
     Button5: TButton;
-    Button6: TButton;
     Button7: TButton;
     Chart1: TChart;
+    Chart1BarSeries1: TBarSeries;
     Image1: TImage;
     Label1: TLabel;
     Label2: TLabel;
@@ -37,6 +37,8 @@ type
     Panel3: TPanel;
     Panel4: TPanel;
     RadioGroup1: TRadioGroup;
+    SaveDialog1: TSaveDialog;
+    SaveDialog2: TSaveDialog;
     SpinEdit1: TSpinEdit;
     SpinEdit2: TSpinEdit;
     StringGrid1: TStringGrid;
@@ -48,11 +50,18 @@ type
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
+
     procedure Button7Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
+    procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure Label2Click(Sender: TObject);
     procedure Label3Click(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
     procedure SpinEdit1Change(Sender: TObject);
+    procedure StringGrid2Click(Sender: TObject);
+    procedure TabSheet2Show(Sender: TObject);
+
   private
     procedure cargarDatosLimpios(fils, cols: integer);
     procedure calcularProbabilidadesApr();
@@ -101,13 +110,18 @@ var
   {M[ETOODS PARA LA VEROSIMILITUD}
   matrizMedias: array of array of real;
   matrizDesviacionesE: array of array of real;
+  verosimilitudesGraph: array of real;
   {matrizFrecuencias: array of array of integer;}
   matrizFrecuenciasG: array of array of array of integer;
   {NAIVE BAYES, ENTRENAMIENTO CON EL CONJUNTO T}
   F:Textfile;
+  F2:Textfile;
+  colores: array of TColor;
+  lineas:TStringList;
 implementation
 
-
+uses
+    Unit3;
 {$R *.lfm}
 
 { TForm3 }
@@ -501,6 +515,7 @@ var
   pertenecea: integer;
   i, j: integer;
 begin
+  setlength(verosimilitudesGraph, noClases);
   pMayor:=-1;
   pertenecea:=-1;
   for i:=0 to noClases-1 do begin
@@ -549,6 +564,8 @@ begin
 
        end;
        pac:= pac * probaprXclase[i];
+       verosimilitudesGraph[i]:= pac;
+       WriteLn(verosimilitudesGraph[i], ' ',i);
        {WriteLn();
        WriteLn(' Apriori: ', probaprXclase[i], ' Probabilidad de pertenecer a la clase ', i, ' =', pac);
        WriteLn();}
@@ -561,6 +578,8 @@ begin
           pMayor:=pac;
           perteneceA:=i;
        end;
+
+
   end;
   {WriteLn('Probabilidad final: ',  pMayor, ' Clase: ', perteneceA);}
   predictDecF:= perteneceA;
@@ -599,7 +618,7 @@ var
       r:=stringgrid2.Cells[length(dataSetP[0]),i];
 
       writeln();
-      //writeln('Clase real: ', r);
+      writeln('Clase real: ', r);
 
       j:= predictDecF(entrada);
       if j = strtoint(r) then
@@ -635,12 +654,12 @@ begin
   end;
   stringgrid2.DeleteRow(0);
 
-  for i:=0 to fils-1 do begin
+  {for i:=0 to fils-1 do begin
     for j:=0 to cols-1 do begin
       writeln(dataSetP[i,j]);
     end;
     writeln();
-  end;
+  end;        }
 end;
 
 
@@ -823,7 +842,7 @@ begin
         entrada[j]:= linesFromF.strings[j];
       end;
 
-      clase := strtoint(linesfromF.Strings[15]);
+      clase:= strtoint(linesfromF.Strings[length(dataSetLimpio[0])]);
       salida:= predictDecF(entrada);
 
       if salida = clase then begin
@@ -847,20 +866,21 @@ begin
 
 end;
 
-procedure TForm3.Button5Click(Sender: TObject);
-begin
 
-end;
+
 {EVALUAR P}
 procedure TForm3.Button7Click(Sender: TObject);
 begin
   testingP();
 end;
 
-procedure TForm3.Button4Click(Sender: TObject);
+procedure TForm3.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
-
+  Form2.Show;
 end;
+
+
+
 
 {--------------Conjunto de entrenamiento de Naive Bayes--------------}
 procedure TForm3.Button1Click(Sender: TObject);
@@ -908,6 +928,131 @@ procedure TForm3.SpinEdit1Change(Sender: TObject);
 begin
   recovery(stringgrid1.RowCount, stringgrid1.ColCount-1);
 end;
+
+procedure TForm3.StringGrid2Click(Sender: TObject);
+var
+   filaSelec, col: integer;
+   entrada: array of string;
+   predict: integer;
+begin
+  entrada:=nil;
+  setlength(entrada,length(dataSetP[0]));
+  filaSelec := StringGrid2.Row;
+
+  for col:=0 to length(dataSetP[0])-1 do begin
+    entrada[col]:= StringGrid2.Cells[col, filaSelec];
+  end;
+
+  predict:= predictDecF(entrada);
+
+  Chart1BarSeries1.Clear;
+  //reutilizamos col porque pues lo voy a limpiar a 0
+  for col:=0 to noClases-1 do begin
+    if col= predict then
+      Chart1BarSeries1.AddXY(col, verosimilitudesGraph[col], 'C' + IntToStr(col), clGreen)
+    else
+      Chart1BarSeries1.AddXY(col, verosimilitudesGraph[col], 'C' + IntToStr(col), clRed);
+  end;
+end;
+
+procedure TForm3.TabSheet2Show(Sender: TObject);
+begin
+  Image1.Canvas.Brush.Color:=clWhite;
+  Image1.Canvas.Rectangle(0,0,Image1.Width,Image1.Height);
+end;
+
+{
+TRATARE DE QUE TODO LO DE LOS DATOS SINTETICOS QUEDEN AQUI AUNQUE ME CUESTE ANDAR
+BUSCANDO POR TODO EL CODIGO
+}
+{clickeo para que se pinten las n clases que dijo el usuario}
+{
+También la modificacion de alguna clase selecta, color y figura
+igual es un poco irrelevante porque sera de la misma clase pero pues visualmente
+es interesante
+No pude }
+procedure TForm3.Button4Click(Sender: TObject);
+var
+  i:integer;
+begin
+  setlength(colores, 7);
+  lineas:=TStringList.Create;
+  colores[0]:=clRed;
+  colores[1]:=clNavy;
+  colores[2]:=clLime;
+  colores[3]:=clYellow;
+  colores[4]:=clBlue;
+  colores[5]:=clFuchsia;
+  colores[6]:=clAqua;
+
+  radiogroup1.Items.Clear;
+  for i:=0 to spinedit2.Value-1 do begin
+      radiogroup1.Items.Add('Clase: ' + inttostr(i));
+  end;
+end;
+
+procedure TForm3.Image1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  linea: string;
+
+begin
+
+
+  if Button=mbLeft then
+  begin
+     if radioGroup1.ItemIndex < 7 then begin
+        image1.Canvas.Brush.Color:=colores[radioGroup1.ItemIndex];
+        Image1.Canvas.Ellipse(X-4,Y-4,X+4,y+4);
+
+     end
+     else begin
+         image1.Canvas.Brush.Color:=colores[radioGroup1.ItemIndex mod 7];
+         Image1.Canvas.Ellipse(X-4,Y-4,X+4,y+4);
+     end;
+     linea:= floattostr(X/100) + ',' + floattostr(Y/100) + ',' + IntToStr(radioGroup1.ItemIndex);
+     lineas.Add(linea);
+  end;
+
+end;
+procedure TForm3.Button5Click(Sender: TObject);
+var
+  hdrs: string;
+  i:integer;
+begin
+  if lineas.Count= 0 then begin
+       ShowMessage('Nada que guardar');
+       Exit;
+  end;
+  if savedialog2.Execute then begin
+     AssignFile(F2,Savedialog2.FileName);
+
+     {$I-}
+         rewrite(F2);  //crear archivo...si existe Sobre escribe y destruye
+    {$I+}
+
+
+    if IOResult=0 then
+    begin
+     hdrs:= '0,0,' + inttostr(spinedit2.Value);
+     Writeln(F2, hdrs);
+
+      for i:=0 to lineas.Count-1 do begin
+          Writeln(F2, lineas.Strings[i]);
+      end;
+
+
+    end;
+     lineas.Clear;
+     Image1.Canvas.Clear;
+     Image1.Canvas.Brush.Color:=clWhite;
+     Image1.Canvas.FillRect(0, 0, Image1.Width, Image1.Height);
+  end;
+  showMessage('Archivo guardado exitosamente.');
+  closeFile(F2);
+end;
+
+
 
 end.
 

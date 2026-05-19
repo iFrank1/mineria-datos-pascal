@@ -52,6 +52,7 @@ type
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure ComboBox3Change(Sender: TObject);
+    procedure ComboBox4Change(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure Label5Click(Sender: TObject);
@@ -911,6 +912,11 @@ begin
 
 end;
 
+procedure TForm1.ComboBox4Change(Sender: TObject);
+begin
+
+end;
+
 procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
      Form2.Show;
@@ -1219,6 +1225,7 @@ begin
       end;
     end;
     showMessage('Archivo guardado exitosamente.');
+    closeFile(F);
   end;
 end;
 

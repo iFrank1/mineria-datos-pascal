@@ -180,6 +180,7 @@ object Form1: TForm1
     TabOrder = 8
     Text = 'Atributos'
     Visible = False
+    OnChange = ComboBox4Change
   end
   object Button3: TButton
     Left = 341
