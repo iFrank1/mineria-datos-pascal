@@ -851,9 +851,9 @@ begin
       else
           countNeg:=countNeg+1;
   end;
-  linesFromF.Free;
-  pruebasAEntrenamientos:= (countPos / folks[pruebaF].Count) * 100;
 
+  pruebasAEntrenamientos:= (countPos / folks[pruebaF].Count) * 100;
+  linesFromF.Free;
 end;
 
 procedure TForm3.Label2Click(Sender: TObject);
@@ -1054,9 +1054,11 @@ begin
      Image1.Canvas.Clear;
      Image1.Canvas.Brush.Color:=clWhite;
      Image1.Canvas.FillRect(0, 0, Image1.Width, Image1.Height);
+     showMessage('Archivo guardado exitosamente.');
+     closeFile(F2);
   end;
-  showMessage('Archivo guardado exitosamente.');
-  closeFile(F2);
+
+
 end;
 
 
